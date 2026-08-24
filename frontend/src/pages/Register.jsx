@@ -5,9 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import OndaDeCarga from '../components/OndaDeCarga';
 import '../styles/Auth.css';
 
-export default function Login() {
+export default function Register() {
+  const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmarPassword, setConfirmarPassword] = useState('');
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
 
@@ -17,15 +19,29 @@ export default function Login() {
   async function manejarEnvio(evento) {
     evento.preventDefault();
     setError('');
+
+    if (password !== confirmarPassword) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
     setCargando(true);
 
     try {
-      const respuesta = await api.post('/auth/login', { email, password });
+      // El backend, al registrar, ya devuelve token + usuario,
+      // asi que iniciamos sesion automaticamente sin pedirle
+      // que ademas haga login por separado.
+      const respuesta = await api.post('/auth/register', { nombre, email, password });
       iniciarSesion(respuesta.data);
       navigate('/dashboard');
     } catch (err) {
       const mensaje =
-        err.response?.data?.mensaje || 'No se pudo iniciar sesion. Intenta de nuevo.';
+        err.response?.data?.mensaje || 'No se pudo completar el registro. Intenta de nuevo.';
       setError(mensaje);
     } finally {
       setCargando(false);
@@ -41,8 +57,8 @@ export default function Login() {
             Ener<span>Gest</span>
           </h1>
           <p className="auth__tagline">
-            Monitorea el consumo, detecta desperdicio y reduce la huella
-            energética de tu operación.
+            Crea tu cuenta para empezar a monitorear el consumo energético de
+            tu operación.
           </p>
           <OndaDeCarga />
           <span className="auth__caption">Carga en tiempo real — planta demo</span>
@@ -51,10 +67,24 @@ export default function Login() {
 
       <section className="auth__form-side">
         <form className="auth__form" onSubmit={manejarEnvio} noValidate>
-          <h2>Iniciar sesión</h2>
+          <h2>Crear cuenta</h2>
           <p className="auth__form-sub">
-            Ingresa con tu cuenta para acceder al panel de gestión energética.
+            Regístrate para acceder al panel de gestión energética.
           </p>
+
+          <label className="auth__label" htmlFor="nombre">
+            Nombre completo
+          </label>
+          <input
+            id="nombre"
+            type="text"
+            className="auth__input"
+            placeholder="Ana Torres"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            autoComplete="name"
+            required
+          />
 
           <label className="auth__label" htmlFor="email">
             Correo electrónico
@@ -77,10 +107,24 @@ export default function Login() {
             id="password"
             type="password"
             className="auth__input"
-            placeholder="••••••••"
+            placeholder="Mínimo 6 caracteres"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
+            autoComplete="new-password"
+            required
+          />
+
+          <label className="auth__label" htmlFor="confirmarPassword">
+            Confirmar contraseña
+          </label>
+          <input
+            id="confirmarPassword"
+            type="password"
+            className="auth__input"
+            placeholder="Repite tu contraseña"
+            value={confirmarPassword}
+            onChange={(e) => setConfirmarPassword(e.target.value)}
+            autoComplete="new-password"
             required
           />
 
@@ -91,11 +135,11 @@ export default function Login() {
           )}
 
           <button type="submit" className="auth__submit" disabled={cargando}>
-            {cargando ? 'Verificando...' : 'Entrar'}
+            {cargando ? 'Creando cuenta...' : 'Crear cuenta'}
           </button>
 
           <p className="auth__hint">
-            ¿Aún no tienes cuenta? <Link to="/register">Regístrate aquí</Link>
+            ¿Ya tienes cuenta? <Link to="/login">Inicia sesión aquí</Link>
           </p>
         </form>
       </section>
