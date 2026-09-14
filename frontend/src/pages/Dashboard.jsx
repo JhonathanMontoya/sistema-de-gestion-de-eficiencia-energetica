@@ -1,35 +1,26 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { CAMBIOS_EFICIENCIA } from '../data/cambiosEficiencia';
+import { BENEFICIOS_GESTION } from '../data/beneficiosGestion';
 import '../styles/Dashboard.css';
-
-// Modulos que se implementaran en sprints siguientes.
-// Por ahora solo son tarjetas de referencia, sin logica.
-const MODULOS_FUTUROS = [
-  {
-    titulo: 'Consumo en tiempo real',
-    descripcion: 'Lecturas de medidores por área o sede.',
-  },
-  {
-    titulo: 'Dispositivos',
-    descripcion: 'Inventario de equipos y su consumo asociado.',
-  },
-  {
-    titulo: 'Alertas de eficiencia',
-    descripcion: 'Notificaciones cuando el consumo supera el umbral.',
-  },
-  {
-    titulo: 'Reportes',
-    descripcion: 'Historicos y comparativos de eficiencia energética.',
-  },
-];
 
 export default function Dashboard() {
   const { usuario, cerrarSesion } = useAuth();
   const navigate = useNavigate();
+  const [moduloSeleccionado, setModuloSeleccionado] = useState(null);
 
   function manejarCierreSesion() {
     cerrarSesion();
     navigate('/login');
+  }
+
+  function manejarClicModulo(modulo) {
+    setModuloSeleccionado(modulo);
+  }
+
+  function cerrarModal() {
+    setModuloSeleccionado(null);
   }
 
   return (
@@ -57,21 +48,62 @@ export default function Dashboard() {
         <section className="dashboard__bienvenida">
           <h2>Bienvenido/a, {usuario?.nombre}</h2>
           <p>
-            Este es el panel principal del sistema. Los módulos de monitoreo de
-            consumo y eficiencia se habilitarán en los próximos sprints.
+            La eficiencia energética busca que aprovechemos mejor la energía que usamos
+            todos los días. Estas son las tendencias y beneficios clave que guían la
+            gestión energética actual.
           </p>
         </section>
 
-        <section className="dashboard__grid">
-          {MODULOS_FUTUROS.map((modulo) => (
-            <article key={modulo.titulo} className="dashboard__card">
-              <span className="dashboard__card-badge">Próximamente</span>
-              <h3>{modulo.titulo}</h3>
-              <p>{modulo.descripcion}</p>
-            </article>
-          ))}
+        <section className="dashboard__seccion">
+          <h2 className="dashboard__seccion-titulo">Lo que está cambiando la eficiencia energética</h2>
+          <div className="dashboard__grid">
+            {CAMBIOS_EFICIENCIA.map((modulo) => (
+              <article
+                key={modulo.titulo}
+                className="dashboard__card"
+                onClick={() => manejarClicModulo(modulo)}
+                role="button"
+                tabIndex={0}
+              >
+                <h3>{modulo.titulo}</h3>
+                <p>{modulo.descripcion}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="dashboard__seccion">
+          <h2 className="dashboard__seccion-titulo">Beneficios de una gestión energética</h2>
+          <div className="dashboard__grid">
+            {BENEFICIOS_GESTION.map((modulo) => (
+              <article
+                key={modulo.titulo}
+                className="dashboard__card"
+                onClick={() => manejarClicModulo(modulo)}
+                role="button"
+                tabIndex={0}
+              >
+                <h3>{modulo.titulo}</h3>
+                <p>{modulo.descripcion}</p>
+              </article>
+            ))}
+          </div>
         </section>
       </main>
+
+      {moduloSeleccionado && (
+        <div className="dashboard__modal-overlay" onClick={cerrarModal}>
+          <div className="dashboard__modal" onClick={(e) => e.stopPropagation()}>
+            <button className="dashboard__modal-cerrar" onClick={cerrarModal}>
+              ✕
+            </button>
+            <h2>{moduloSeleccionado.titulo}</h2>
+            <div className="dashboard__modal-contenido">
+              {moduloSeleccionado.contenido}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
