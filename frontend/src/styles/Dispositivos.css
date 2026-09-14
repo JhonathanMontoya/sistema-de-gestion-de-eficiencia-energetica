@@ -1,0 +1,86 @@
+.dispositivos {
+  min-height: 100%;
+}
+
+.dispositivos__header {
+  padding: 1.4rem 2.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.dispositivos__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-eco);
+}
+
+.dispositivos__header h1 {
+  font-size: 1.4rem;
+  margin-top: 0.2rem;
+}
+
+.dispositivos__main {
+  padding: 2.5rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.dispositivos__tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.dispositivos__tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.7rem 1rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.dispositivos__tab:hover {
+  color: var(--text);
+}
+
+.dispositivos__tab--activa {
+  color: var(--accent-eco);
+  border-bottom-color: var(--accent-eco);
+}
+
+.dispositivos__contenido {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem;
+}
+
+.dispositivos__badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--accent-energy);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  margin-bottom: 0.75rem;
+}
+
+.dispositivos__contenido h2 {
+  font-size: 1.15rem;
+  margin-bottom: 0.5rem;
+}
+
+.dispositivos__contenido p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
