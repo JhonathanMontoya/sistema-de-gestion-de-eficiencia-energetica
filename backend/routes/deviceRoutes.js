@@ -4,6 +4,7 @@ const {
   listarDispositivos,
   editarDispositivo,
   eliminarDispositivo,
+  actualizarHoras,
 } = require('../controllers/deviceController');
 const protegerRuta = require('../middleware/authMiddleware');
 
@@ -15,6 +16,7 @@ router.use(protegerRuta);
 router.get('/', listarDispositivos);
 router.post('/', crearDispositivo);
 router.put('/:id', editarDispositivo);
+router.patch('/:id/horas', actualizarHoras);
 router.delete('/:id', eliminarDispositivo);
 
 module.exports = router;

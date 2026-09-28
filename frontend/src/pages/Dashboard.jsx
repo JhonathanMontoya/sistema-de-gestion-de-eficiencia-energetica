@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { CAMBIOS_EFICIENCIA } from '../data/cambiosEficiencia';
 import { BENEFICIOS_GESTION } from '../data/beneficiosGestion';
 import '../styles/Dashboard.css';
+import TarjetaGrid from '../components/TarjetaGrid';
 
 export default function Dashboard() {
   const { usuario, cerrarSesion } = useAuth();
@@ -94,21 +95,10 @@ export default function Dashboard() {
             Lo que está cambiando la eficiencia energética
           </h2>
 
-          <div className="dashboard__grid">
-            {CAMBIOS_EFICIENCIA.map((modulo) => (
-              <article
-                key={modulo.titulo}
-                className="dashboard__card"
-                onClick={() => manejarClicModulo(modulo)}
-                role="button"
-                tabIndex={0}
-              >
-                <h3>{modulo.titulo}</h3>
-
-                <p>{modulo.descripcion}</p>
-              </article>
-            ))}
-          </div>
+          <TarjetaGrid
+            items={CAMBIOS_EFICIENCIA}
+            onSeleccionar={manejarClicModulo}
+          />
         </section>
 
         <section className="dashboard__seccion">
@@ -116,21 +106,10 @@ export default function Dashboard() {
             Beneficios de una gestión energética
           </h2>
 
-          <div className="dashboard__grid">
-            {BENEFICIOS_GESTION.map((modulo) => (
-              <article
-                key={modulo.titulo}
-                className="dashboard__card"
-                onClick={() => manejarClicModulo(modulo)}
-                role="button"
-                tabIndex={0}
-              >
-                <h3>{modulo.titulo}</h3>
-
-                <p>{modulo.descripcion}</p>
-              </article>
-            ))}
-          </div>
+          <TarjetaGrid
+            items={BENEFICIOS_GESTION}
+            onSeleccionar={manejarClicModulo}
+          />
         </section>
 
       </main>

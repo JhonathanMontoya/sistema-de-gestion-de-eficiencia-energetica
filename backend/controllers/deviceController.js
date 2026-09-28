@@ -123,9 +123,52 @@ async function eliminarDispositivo(req, res) {
   }
 }
 
+// PATCH /api/devices/:id/horas  (HU-09: guarda las horas de uso del dispositivo)
+async function actualizarHoras(req, res) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ mensaje: 'Identificador de dispositivo inválido' });
+    }
+
+    const { horasUso } = req.body;
+    if (horasUso === undefined || horasUso === null || horasUso === '') {
+      return res.status(400).json({ mensaje: 'Las horas de uso son obligatorias' });
+    }
+
+    const horas = Number(horasUso);
+    if (!Number.isFinite(horas)) {
+      return res.status(400).json({ mensaje: 'Las horas de uso deben ser un número' });
+    }
+
+    const dispositivo = await Device.findOneAndUpdate(
+      { _id: id, usuario: req.usuarioId },
+      { horasUso: horas },
+      { new: true, runValidators: true }
+    );
+
+    if (!dispositivo) {
+      return res.status(404).json({ mensaje: 'Dispositivo no encontrado' });
+    }
+
+    return res.status(200).json({
+      mensaje: 'Horas de uso guardadas correctamente',
+      dispositivo,
+    });
+  } catch (error) {
+    const mensaje = mensajeDeValidacion(error);
+    if (mensaje) {
+      return res.status(400).json({ mensaje });
+    }
+    console.error('[deviceController.actualizarHoras]', error);
+    return res.status(500).json({ mensaje: 'Error interno al guardar las horas de uso' });
+  }
+}
+
 module.exports = {
   crearDispositivo,
   listarDispositivos,
   editarDispositivo,
   eliminarDispositivo,
+  actualizarHoras,
 };
