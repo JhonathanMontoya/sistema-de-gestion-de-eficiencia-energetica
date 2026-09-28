@@ -11,11 +11,8 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-
           <Route path="/login" element={<Login />} />
-
           <Route path="/register" element={<Register />} />
-
           <Route
             path="/dashboard"
             element={
@@ -24,7 +21,6 @@ export default function App() {
               </RutaProtegida>
             }
           />
-
           <Route
             path="/dispositivos"
             element={
@@ -33,9 +29,8 @@ export default function App() {
               </RutaProtegida>
             }
           />
-
+          {/* Cualquier otra ruta redirige al login por ahora */}
           <Route path="*" element={<Navigate to="/login" replace />} />
-
         </Routes>
       </BrowserRouter>
     </AuthProvider>

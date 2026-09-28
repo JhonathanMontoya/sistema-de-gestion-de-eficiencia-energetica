@@ -249,3 +249,42 @@
   line-height: 1.5;
   margin: 0;
 }
+/* ---------- Extras para <TarjetaGrid> y acceso a Dispositivos ---------- */
+.dashboard__card--estatica {
+  cursor: default;
+}
+
+.dashboard__card--estatica:hover {
+  transform: none;
+}
+
+.dashboard__card-meta {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--accent-eco);
+}
+
+.dashboard__card-acciones {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.dashboard__cta {
+  margin-top: 1.25rem;
+  background: var(--accent-energy);
+  color: #16130a;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 1.2rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.dashboard__cta:hover {
+  filter: brightness(1.08);
+}
