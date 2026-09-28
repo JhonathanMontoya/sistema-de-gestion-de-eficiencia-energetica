@@ -1,131 +1,36 @@
-# EnerGest — Sistema de Gestión de Eficiencia Energética
+# EnerGest
 
-Entregable Sprint 1: login funcional + página principal, con backend, frontend
-y conexión a base de datos. Sin módulos de negocio todavía (eso llega en los
-siguientes sprints).
+EnerGest es una aplicación web académica para registrar dispositivos y lecturas de consumo energético. Usa React y Vite en el frontend, Express en el backend y MongoDB con Mongoose para guardar los datos.
 
-## Stack
+## Estructura
 
-| Capa      | Tecnología                          |
-|-----------|--------------------------------------|
-| Frontend  | React 18 + Vite + React Router       |
-| Backend   | Node.js + Express                    |
-| Base de datos | MongoDB + Mongoose               |
-| Auth      | JWT + bcrypt (contraseñas hasheadas) |
+- `backend/config`: conexión con MongoDB.
+- `backend/models`: usuarios, dispositivos, lecturas y contenido editorial.
+- `backend/controllers` y `backend/routes`: lógica y endpoints de la API.
+- `backend/middleware`: autenticación y permisos por rol.
+- `frontend/src`: páginas, componentes y comunicación con la API.
+- `docs/contrato-api-frontend.md`: rutas y formatos de datos acordados para la interfaz.
 
-## Estructura del proyecto
+## Puesta en marcha local
 
-```
-energia-mvp/
-├── backend/
-│   ├── config/db.js            # conexión a MongoDB
-│   ├── controllers/authController.js
-│   ├── middleware/authMiddleware.js  # valida el JWT
-│   ├── models/User.js
-│   ├── routes/authRoutes.js
-│   ├── server.js               # punto de entrada
-│   └── .env.example
-└── frontend/
-    ├── src/
-    │   ├── pages/Login.jsx
-    │   ├── pages/Dashboard.jsx     # home tras iniciar sesión
-    │   ├── context/AuthContext.jsx
-    │   ├── components/RutaProtegida.jsx
-    │   └── services/api.js
-    └── .env.example
-```
+1. Instala Node.js y las dependencias del backend y frontend con `npm install` dentro de cada carpeta.
+2. Copia `backend/.env.example` a `backend/.env` y completa localmente `MONGO_URI` y `JWT_SECRET`. No subas el `.env` al repositorio.
+3. En una terminal, desde `backend`, inicia el servidor con `npm run dev`.
+4. En otra terminal, desde `frontend`, inicia Vite con `npm run dev`.
+5. Abre la dirección local que muestra Vite.
 
-## 1. Requisitos previos
+El backend corre por defecto en `http://localhost:5000` y Vite en `http://localhost:5173`. `frontend/.env.example` permite cambiar la URL de API; el valor predeterminado funciona con ese backend local.
 
-- Node.js 18+ instalado
-- Una base de datos MongoDB. Dos opciones, elige una:
-  - **MongoDB Atlas** (recomendado si no quieres instalar nada): crea una
-    cuenta gratis en https://www.mongodb.com/cloud/atlas, crea un cluster
-    gratuito (M0) y copia la cadena de conexión.
-  - **MongoDB local**: instala MongoDB Community Server en tu máquina.
+## Roles
 
-## 2. Levantar el backend
+- `cliente`: rol asignado en el registro público; administra sus propios dispositivos y lecturas.
+- `analista`: se conserva para las cuentas existentes y puede consultar sus propios datos sin editarlos.
+- `administrador`: gestiona contenido editorial y roles de cuentas.
 
-```bash
-cd backend
-npm install
-cp .env.example .env
-```
+El servidor valida permisos en cada petición. El cliente nunca puede asignarse el rol `administrador` enviando datos desde el navegador. Los dispositivos y lecturas se consultan por la cuenta autenticada.
 
-Edita `.env` y pon tu `MONGO_URI` real (local o de Atlas) y cambia `JWT_SECRET`
-por cualquier texto largo propio.
+Para habilitar el primer administrador, primero registra una cuenta de manera normal y luego ejecuta, desde `backend`, `npm run promover-administrador -- correo@ejemplo.com`. Para añadir textos editoriales de demostración en una base vacía, ejecuta `npm run inicializar-contenido`. Ambos procesos usan la base indicada en `.env`.
 
-```bash
-npm run dev
-```
+## API
 
-Deberías ver en la consola:
-
-```
-[DB] Conectado a MongoDB -> energia_mvp
-[Server] Backend corriendo en http://localhost:5000
-```
-
-Si ves un error de conexión, revisa que `MONGO_URI` esté bien copiada (usuario,
-password, y que tu IP esté en la whitelist de Atlas si usas la nube).
-
-### Crear tu primer usuario de prueba
-
-El login necesita que exista al menos un usuario en la base de datos. Como el
-sprint 1 solo pide el login (no un formulario de registro visual), créalo con
-una petición HTTP directa. Puedes usar Postman, Insomnia, o este `curl`:
-
-```bash
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"Ana Torres","email":"ana@energest.com","password":"123456","rol":"administrador"}'
-```
-
-Esto te devuelve un token y confirma que el usuario quedó guardado en Mongo.
-
-## 3. Levantar el frontend
-
-En otra terminal:
-
-```bash
-cd frontend
-npm install
-cp .env.example .env
-npm run dev
-```
-
-Abre la URL que te muestre Vite (normalmente `http://localhost:5173`).
-
-## 4. Probar el flujo completo
-
-1. Entra a `http://localhost:5173` → te redirige a `/login`.
-2. Inicia sesión con el usuario que creaste en el paso anterior
-   (`ana@energest.com` / `123456`).
-3. Si las credenciales son correctas, te lleva a `/dashboard`, la página
-   principal del sistema (sin funciones todavía, solo estructura).
-4. El botón "Cerrar sesión" borra el token y te regresa al login.
-5. Si intentas entrar directo a `/dashboard` sin haber iniciado sesión, el
-   sistema te redirige automáticamente a `/login` (ruta protegida).
-
-## Decisiones técnicas (para tu sustentación)
-
-- **Contraseñas hasheadas con bcrypt**: nunca se guarda la contraseña en texto
-  plano en la base de datos.
-- **JWT en vez de sesiones**: el token se guarda en `localStorage` del
-  navegador y se envía en cada petición en el header `Authorization`. Es el
-  enfoque estándar para separar frontend y backend como pide el proyecto.
-- **Variables de entorno (`.env`)**: ni la cadena de conexión a Mongo ni el
-  secreto de JWT quedan escritos en el código fuente.
-- **Arquitectura por capas en el backend** (`routes` → `controllers` →
-  `models`): permite agregar los módulos de consumo energético en los
-  siguientes sprints sin reescribir lo ya hecho.
-- **Ruta protegida en el frontend**: el `Dashboard` valida que exista sesión
-  activa antes de mostrarse.
-
-## Pendiente para próximos sprints (no incluido aquí)
-
-- Módulos funcionales del dashboard (consumo, dispositivos, alertas, reportes).
-- Pantalla visual de registro (por ahora solo existe el endpoint).
-- Historias de usuario, casos de uso y diagrama de clases (documentación,
-  no código — se trabajan aparte).
-- Tablero en Trello y repositorio en GitHub con este código versionado.
+La lista de rutas, permisos y estructuras JSON está en [docs/contrato-api-frontend.md](docs/contrato-api-frontend.md). La API se publica bajo `/api`; consulta `/api/health` para verificar que el servidor está activo.

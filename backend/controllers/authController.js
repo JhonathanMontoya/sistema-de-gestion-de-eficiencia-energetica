@@ -15,13 +15,17 @@ function generarToken(usuario) {
 // pero se necesita para poder CREAR el primer usuario de prueba en la BD.
 async function registrar(req, res) {
   try {
-    const { nombre, email, password, rol } = req.body;
+    const { nombre, email, password } = req.body;
 
-    if (!nombre || !email || !password) {
+    if (typeof nombre !== 'string' || !nombre.trim() || typeof email !== 'string' || !email.trim() || typeof password !== 'string') {
       return res.status(400).json({ mensaje: 'Nombre, correo y contraseña son obligatorios' });
     }
+    if (password.length < 6) {
+      return res.status(400).json({ mensaje: 'La contraseña debe tener al menos 6 caracteres' });
+    }
 
-    const existente = await User.findOne({ email });
+    const correoNormalizado = email.trim().toLowerCase();
+    const existente = await User.findOne({ email: correoNormalizado });
     if (existente) {
       return res.status(409).json({ mensaje: 'Ya existe un usuario registrado con ese correo' });
     }
@@ -30,10 +34,11 @@ async function registrar(req, res) {
     const passwordHasheado = await bcrypt.hash(password, salt);
 
     const nuevoUsuario = await User.create({
-      nombre,
-      email,
+      nombre: nombre.trim(),
+      email: correoNormalizado,
       password: passwordHasheado,
-      rol,
+      // El registro público siempre crea clientes; nunca acepta roles del navegador.
+      rol: 'cliente',
     });
 
     const token = generarToken(nuevoUsuario);
@@ -49,6 +54,12 @@ async function registrar(req, res) {
       },
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ mensaje: 'Ya existe un usuario registrado con ese correo' });
+    }
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ mensaje: 'Revisa el nombre, correo y contraseña' });
+    }
     console.error('[authController.registrar]', error);
     return res.status(500).json({ mensaje: 'Error interno al registrar el usuario' });
   }
@@ -59,12 +70,12 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) {
       return res.status(400).json({ mensaje: 'Correo y contraseña son obligatorios' });
     }
 
     // .select('+password') porque en el modelo lo marcamos como select:false
-    const usuario = await User.findOne({ email }).select('+password');
+    const usuario = await User.findOne({ email: email.trim().toLowerCase() }).select('+password');
     if (!usuario) {
       return res.status(401).json({ mensaje: 'Credenciales invalidas' });
     }
@@ -99,7 +110,14 @@ async function perfil(req, res) {
     if (!usuario) {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
-    return res.status(200).json({ usuario });
+    return res.status(200).json({
+      usuario: {
+        id: usuario._id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol,
+      },
+    });
   } catch (error) {
     console.error('[authController.perfil]', error);
     return res.status(500).json({ mensaje: 'Error interno al obtener el perfil' });

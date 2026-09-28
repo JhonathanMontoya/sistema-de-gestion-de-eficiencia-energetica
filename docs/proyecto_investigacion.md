@@ -27,3 +27,34 @@ Analizar consumo total y comparaciones entre periodos.
 Notificar al usuario cuando el consumo supere un límite definido.
 Generar reportes con el historial de consumo.
 Garantizar la seguridad de la información (contraseñas protegidas, control de acceso por sesión).
+
+Marco Teórico
+
+
+
+Eficiencia y gestión energética: capacidad de reducir el consumo de energía sin afectar la calidad del servicio prestado. La gestión energética planifica, monitorea y controla ese consumo para identificar ahorros, siguiendo el ciclo de mejora continua que promueven estándares como la ISO 50001.
+
+
+
+ODS 12 (Producción y consumo responsable): objetivo de la Agenda 2030 que busca garantizar patrones de consumo sostenibles. La gestión eficiente de la energía reduce directamente el impacto ambiental de una organización.
+
+
+
+Sistemas de información: conjunto de datos, procesos y tecnología que capturan y organizan información para apoyar decisiones. Sustituyen métodos manuales (como hojas de cálculo) por un registro centralizado y accesible.
+
+
+
+Arquitectura cliente-servidor: el frontend gestiona la interacción con el usuario y el backend la lógica de negocio, comunicándose mediante una API HTTP. Este proyecto usa React en el frontend y Node.js con Express en el backend, con arquitectura por capas (rutas, controladores, modelos).
+
+
+
+Bases de datos NoSQL: almacenan información en documentos flexibles (como MongoDB), a diferencia de las tablas fijas de una base relacional. Facilita que la estructura de datos evolucione entre sprints.
+
+
+
+Autenticación y seguridad: los JSON Web Tokens (JWT) mantienen la sesión de un usuario sin que el servidor deba recordar su estado. Las contraseñas se protegen con funciones de hash (bcrypt), que las vuelven irreversibles.
+
+
+
+Metodologías ágiles: el desarrollo por sprints entrega incrementos funcionales en periodos cortos, permitiendo validar avances y ajustar prioridades. Las historias de usuario documentan los requerimientos desde la perspectiva de quien usará el sistema.
+

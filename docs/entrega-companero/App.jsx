@@ -9,7 +9,7 @@ import {
   DispositivosEnergest,
   LecturasEnergest,
   AdministracionEnergest,
-} from './pages/PortalEnergest.jsx';
+} from './pages/PortalEnergest';
 
 export default function App() {
   return (
