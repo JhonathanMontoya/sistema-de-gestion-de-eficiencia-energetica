@@ -63,6 +63,13 @@ const CONTENIDO_INICIAL = [
     fuente: 'UPME · Plan Energético Nacional 2024–2054', fuenteUrl: 'https://docs.upme.gov.co/DemandayEficiencia/Documents/PEN_2024_2054/PDF2_PE_Eficiencia_Energetica_Publicacion_Tomo_I.pdf',
     orden: 7, publicado: true,
   },
+  {
+    slug: 'empieza-por-tus-equipos', categoria: 'consejo',
+    titulo: 'Empieza por los equipos que más utilizas',
+    resumen: 'Un inventario pequeño y actualizado es más útil que una lista difícil de mantener.',
+    texto: 'Agrega primero los aparatos que usas con frecuencia. Registra su potencia usando la etiqueta o el manual del fabricante y estima cuántas horas los utilizas en un día normal. Si el dato es aproximado, puedes corregirlo cuando tengas una medición mejor. Después guarda lecturas en fechas comparables para reconocer cambios en tus hábitos.',
+    orden: 8, publicado: true,
+  },
 ];
 
 async function inicializarContenido() {
