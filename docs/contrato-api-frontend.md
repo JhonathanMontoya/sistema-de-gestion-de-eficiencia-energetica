@@ -35,11 +35,11 @@ Todas estas rutas se limitan al dueño autenticado.
 | Método y ruta | Uso |
 | --- | --- |
 | `GET /dispositivos` | Responde `{ dispositivos: [...] }` con dispositivos activos |
-| `POST /dispositivos` | Crear `{ nombre, tipo, consumoEstimadoKwhDia, ubicacion }` |
+| `POST /dispositivos` | Crear `{ nombre, categoria, potenciaWatts, horasUsoDiarias, ubicacion }` |
 | `PUT /dispositivos/:id` | Actualizar esos campos |
 | `DELETE /dispositivos/:id` | Archivar el dispositivo y conservar sus lecturas anteriores |
 
-`consumoEstimadoKwhDia` es una cantidad numérica estimada en kWh por día.
+Las categorías admitidas son `aire_acondicionado`, `nevera`, `iluminacion`, `computador`, `televisor`, `lavadora` y `otro`. La potencia se registra en watts y las horas de uso son de 0 a 24 por día. El servidor calcula `consumoEstimadoKwhDia` con la fórmula `(potenciaWatts × horasUsoDiarias) / 1000`. Se conservan también los campos `tipo` y `consumoEstimadoKwhDia` para clientes anteriores.
 
 ## Lecturas manuales
 

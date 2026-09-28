@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { CATEGORIAS, buscarCategoria } from '../data/categoriasDispositivo';
+import { calcularKwh, formatearKwh } from '../utils/consumo';
 import '../styles/PortalEnergest.css';
 
 function ErrorMensaje({ children }) {
@@ -143,7 +145,7 @@ export function PanelEnergest() {
     </>}</MarcoPrivado>;
 }
 
-const FORM_DISPOSITIVO = { nombre: '', tipo: '', consumoEstimadoKwhDia: '', ubicacion: '' };
+const FORM_DISPOSITIVO = { nombre: '', categoria: '', potenciaWatts: '', horasUsoDiarias: '', ubicacion: '' };
 export function DispositivosEnergest() {
   const { usuario } = useAuth();
   const puedeEditar = usuario?.rol !== 'analista';
@@ -156,19 +158,21 @@ export function DispositivosEnergest() {
   async function cargar() { setCargando(true); try { const { data } = await api.get('/dispositivos'); setDispositivos(data.dispositivos || []); setError(''); } catch { setError('No se pudieron cargar tus dispositivos.'); } finally { setCargando(false); } }
   useEffect(() => { cargar(); }, []);
   function cambiar(campo, valor) { setFormulario((actual) => ({ ...actual, [campo]: valor })); }
-  function editar(dispositivo) { setEditando(dispositivo._id); setFormulario({ nombre: dispositivo.nombre, tipo: dispositivo.tipo, consumoEstimadoKwhDia: dispositivo.consumoEstimadoKwhDia, ubicacion: dispositivo.ubicacion || '' }); setMensaje(''); }
+  function editar(dispositivo) { setEditando(dispositivo._id); setFormulario({ nombre: dispositivo.nombre, categoria: dispositivo.categoria || 'otro', potenciaWatts: dispositivo.potenciaWatts ? String(dispositivo.potenciaWatts) : '', horasUsoDiarias: dispositivo.horasUsoDiarias ? String(dispositivo.horasUsoDiarias) : '', ubicacion: dispositivo.ubicacion || '' }); setMensaje(''); }
   function limpiar() { setEditando(''); setFormulario(FORM_DISPOSITIVO); }
-  async function guardar(evento) { evento.preventDefault(); setError(''); setMensaje(''); const datos = { ...formulario, consumoEstimadoKwhDia: Number(formulario.consumoEstimadoKwhDia) }; try { if (editando) await api.put(`/dispositivos/${editando}`, datos); else await api.post('/dispositivos', datos); limpiar(); setMensaje(editando ? 'Cambios guardados.' : 'Dispositivo agregado.'); await cargar(); } catch (err) { setError(err.response?.data?.mensaje || 'Revisa los datos e inténtalo de nuevo.'); } }
+  async function guardar(evento) { evento.preventDefault(); setError(''); setMensaje(''); const categoria = buscarCategoria(formulario.categoria); const potenciaWatts = Number(formulario.potenciaWatts); const horasUsoDiarias = Number(formulario.horasUsoDiarias); const datos = { ...formulario, tipo: categoria?.etiqueta || 'Otro', potenciaWatts, horasUsoDiarias, consumoEstimadoKwhDia: calcularKwh(potenciaWatts, horasUsoDiarias) }; try { if (editando) await api.put(`/dispositivos/${editando}`, datos); else await api.post('/dispositivos', datos); limpiar(); setMensaje(editando ? 'Cambios guardados.' : 'Dispositivo agregado.'); await cargar(); } catch (err) { setError(err.response?.data?.mensaje || 'Revisa los datos e inténtalo de nuevo.'); } }
   async function eliminar(id) { if (!window.confirm('¿Quitar este dispositivo de tu lista? Sus lecturas anteriores se conservarán.')) return; try { await api.delete(`/dispositivos/${id}`); setMensaje('Dispositivo archivado; su historial se conserva.'); await cargar(); } catch (err) { setError(err.response?.data?.mensaje || 'No se pudo archivar el dispositivo.'); } }
   return <MarcoPrivado titulo="Tus dispositivos" descripcion="Organiza tus equipos y guarda una referencia de su consumo diario estimado.">
     <ErrorMensaje>{error}</ErrorMensaje>{mensaje && <p className="eg-exito" role="status">{mensaje}</p>}
     <div className="eg-dispositivos-layout"><section className="eg-panel"><div className="eg-panel__cabecera"><div><span className="eg-etiqueta">Inventario personal</span><h2>Equipos registrados</h2></div><span className="eg-contador">{dispositivos.length}</span></div>
-      {cargando ? <Cargando /> : dispositivos.length ? <div className="eg-lista-dispositivos">{dispositivos.map((d) => <article className="eg-dispositivo" key={d._id}><span className="eg-dispositivo__icono">⌁</span><div className="eg-dispositivo__info"><strong>{d.nombre}</strong><span>{d.tipo}{d.ubicacion ? ` · ${d.ubicacion}` : ''}</span></div><div className="eg-dispositivo__consumo"><strong>{Number(d.consumoEstimadoKwhDia).toLocaleString('es')} kWh</strong><small>estimados / día</small></div>{puedeEditar && <div className="eg-dispositivo__acciones"><button type="button" onClick={() => editar(d)}>Editar</button><button type="button" className="eg-texto-peligro" onClick={() => eliminar(d._id)}>Quitar</button></div>}</article>)}</div> : <div className="eg-vacio"><span>⌂</span><strong>Tu inventario está vacío</strong><p>Agrega tu primer equipo para empezar a organizar el consumo.</p></div>}
+      {cargando ? <Cargando /> : dispositivos.length ? <div className="eg-lista-dispositivos">{dispositivos.map((d) => <article className="eg-dispositivo" key={d._id}><span className="eg-dispositivo__icono">⌁</span><div className="eg-dispositivo__info"><strong>{d.nombre}</strong><span>{d.tipo || buscarCategoria(d.categoria)?.etiqueta || 'Otro'}{d.ubicacion ? ` · ${d.ubicacion}` : ''}</span></div><div className="eg-dispositivo__consumo"><strong>{Number(d.consumoEstimadoKwhDia).toLocaleString('es')} kWh</strong><small>{d.potenciaWatts ? `${d.potenciaWatts} W · ` : ''}estimados / día</small></div>{puedeEditar && <div className="eg-dispositivo__acciones"><button type="button" onClick={() => editar(d)}>Editar</button><button type="button" className="eg-texto-peligro" onClick={() => eliminar(d._id)}>Quitar</button></div>}</article>)}</div> : <div className="eg-vacio"><span>⌂</span><strong>Tu inventario está vacío</strong><p>Agrega tu primer equipo para empezar a organizar el consumo.</p></div>}
     </section>
     {puedeEditar && <form className="eg-panel eg-formulario" onSubmit={guardar}><span className="eg-etiqueta">{editando ? 'Actualizar equipo' : 'Nuevo equipo'}</span><h2>{editando ? 'Editar dispositivo' : 'Agregar dispositivo'}</h2>
       <label>Nombre<input required maxLength="80" value={formulario.nombre} onChange={(e) => cambiar('nombre', e.target.value)} placeholder="Ej. Refrigerador principal" /></label>
-      <label>Tipo de equipo<input required maxLength="50" value={formulario.tipo} onChange={(e) => cambiar('tipo', e.target.value)} placeholder="Ej. Refrigeración" /></label>
-      <label>Consumo estimado (kWh / día)<input required type="number" min="0" step="0.1" value={formulario.consumoEstimadoKwhDia} onChange={(e) => cambiar('consumoEstimadoKwhDia', e.target.value)} placeholder="0.0" /></label>
+      <label>Categoría<select required value={formulario.categoria} onChange={(e) => { const seleccion = e.target.value; const sugerida = buscarCategoria(seleccion)?.wattsTipicos; cambiar('categoria', seleccion); if (!formulario.potenciaWatts && sugerida) cambiar('potenciaWatts', String(sugerida)); }}><option value="">Selecciona una categoría</option>{CATEGORIAS.map((categoria) => <option key={categoria.valor} value={categoria.valor}>{categoria.etiqueta}</option>)}</select></label>
+      <label>Potencia (W)<input required type="number" min="1" max="100000" step="1" value={formulario.potenciaWatts} onChange={(e) => cambiar('potenciaWatts', e.target.value)} placeholder="Ej. 200" /></label>
+      <label>Horas de uso al día<input required type="number" min="0" max="24" step="0.25" value={formulario.horasUsoDiarias} onChange={(e) => cambiar('horasUsoDiarias', e.target.value)} placeholder="Ej. 3" /></label>
+      <p className="eg-ayuda">Consumo estimado: {calcularKwh(formulario.potenciaWatts, formulario.horasUsoDiarias) !== null ? `${formatearKwh(calcularKwh(formulario.potenciaWatts, formulario.horasUsoDiarias))} al día` : 'indica potencia y horas para calcularlo'}.</p>
       <label>Ubicación <span className="eg-opcional">Opcional</span><input maxLength="100" value={formulario.ubicacion} onChange={(e) => cambiar('ubicacion', e.target.value)} placeholder="Ej. Cocina" /></label>
       <div className="eg-formulario__acciones"><button className="eg-boton" type="submit">{editando ? 'Guardar cambios' : 'Agregar equipo'}</button>{editando && <button type="button" className="eg-boton eg-boton--suave" onClick={limpiar}>Cancelar</button>}</div>
     </form>}

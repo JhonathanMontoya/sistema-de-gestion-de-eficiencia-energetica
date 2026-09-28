@@ -18,16 +18,29 @@ async function listarDispositivos(req, res) {
 
 async function crearDispositivo(req, res) {
   try {
-    const { nombre, tipo, consumoEstimadoKwhDia, ubicacion = '' } = req.body;
-    if (!nombre?.trim() || !tipo?.trim() || consumoEstimadoKwhDia === undefined) {
-      return res.status(400).json({ mensaje: 'Nombre, tipo y consumo estimado son obligatorios' });
+    const { nombre, tipo, ubicacion = '' } = req.body;
+    const usaCalculoPorPotencia = ['categoria', 'potenciaWatts', 'horasUsoDiarias']
+      .some((campo) => Object.hasOwn(req.body, campo));
+    const categoria = req.body.categoria || 'otro';
+    const potenciaWatts = usaCalculoPorPotencia ? Number(req.body.potenciaWatts) : 0;
+    const horasUsoDiarias = usaCalculoPorPotencia ? Number(req.body.horasUsoDiarias) : 0;
+    const consumoEstimadoKwhDia = req.body.consumoEstimadoKwhDia === undefined
+      ? (potenciaWatts * horasUsoDiarias) / 1000
+      : Number(req.body.consumoEstimadoKwhDia);
+    if (typeof nombre !== 'string' || !nombre.trim() ||
+        (usaCalculoPorPotencia && (!Number.isFinite(potenciaWatts) || !Number.isFinite(horasUsoDiarias))) ||
+        (!usaCalculoPorPotencia && (typeof tipo !== 'string' || !tipo.trim() || req.body.consumoEstimadoKwhDia === undefined))) {
+      return res.status(400).json({ mensaje: 'Revisa el nombre, categoría, potencia y horas de uso del dispositivo' });
     }
     const dispositivo = await Dispositivo.create({
       usuarioId: req.usuarioId,
       nombre,
-      tipo,
+      tipo: (typeof tipo === 'string' && tipo.trim()) || categoria,
       consumoEstimadoKwhDia,
       ubicacion,
+      categoria,
+      potenciaWatts,
+      horasUsoDiarias,
     });
     return res.status(201).json({ mensaje: 'Dispositivo registrado', dispositivo });
   } catch (error) {
@@ -44,12 +57,27 @@ async function actualizarDispositivo(req, res) {
     if (!idValido(req.params.id)) {
       return res.status(400).json({ mensaje: 'El identificador del dispositivo no es válido' });
     }
-    const camposPermitidos = ['nombre', 'tipo', 'consumoEstimadoKwhDia', 'ubicacion'];
+    const camposPermitidos = [
+      'nombre', 'tipo', 'consumoEstimadoKwhDia', 'ubicacion',
+      'categoria', 'potenciaWatts', 'horasUsoDiarias',
+    ];
     const cambios = Object.fromEntries(
       Object.entries(req.body).filter(([campo]) => camposPermitidos.includes(campo))
     );
     if (Object.keys(cambios).length === 0) {
       return res.status(400).json({ mensaje: 'No se recibieron datos para actualizar' });
+    }
+    if (cambios.consumoEstimadoKwhDia === undefined &&
+        (cambios.potenciaWatts !== undefined || cambios.horasUsoDiarias !== undefined)) {
+      const actual = await Dispositivo.findOne({
+        _id: req.params.id,
+        usuarioId: req.usuarioId,
+        activo: true,
+      });
+      if (!actual) return res.status(404).json({ mensaje: 'Dispositivo no encontrado' });
+      const potencia = cambios.potenciaWatts ?? actual.potenciaWatts;
+      const horas = cambios.horasUsoDiarias ?? actual.horasUsoDiarias;
+      cambios.consumoEstimadoKwhDia = (Number(potencia) * Number(horas)) / 1000;
     }
     const dispositivo = await Dispositivo.findOneAndUpdate(
       { _id: req.params.id, usuarioId: req.usuarioId, activo: true },
