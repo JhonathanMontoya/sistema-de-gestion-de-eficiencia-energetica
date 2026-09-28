@@ -25,8 +25,9 @@ const UserSchema = new mongoose.Schema(
     },
     rol: {
       type: String,
-      enum: ['administrador', 'analista'],
-      default: 'analista',
+      // "analista" se conserva para las cuentas creadas en el Sprint 1.
+      enum: ['administrador', 'analista', 'cliente'],
+      default: 'cliente',
     },
   },
   { timestamps: true } // agrega createdAt y updatedAt automaticamente

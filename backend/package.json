@@ -1,12 +1,14 @@
 {
   "name": "energia-mvp-backend",
   "version": "1.0.0",
-  "description": "Backend del Sistema de Gestion de Eficiencia Energetica - Sprint 1 (Auth)",
+  "description": "API de EnerGest para usuarios, dispositivos, lecturas y contenido editorial",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "promover-administrador": "node scripts/promoverAdministrador.js",
+    "inicializar-contenido": "node scripts/inicializarContenido.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
