@@ -31,6 +31,38 @@ const CONTENIDO_INICIAL = [
     orden: 3,
     publicado: true,
   },
+  {
+    slug: 'iluminacion-led', categoria: 'informativo',
+    titulo: 'Aprovecha la luz y elige bombillas eficientes',
+    resumen: 'La iluminación eficiente empieza con hábitos sencillos y equipos adecuados.',
+    texto: 'Abre cortinas y persianas durante el día para aprovechar la luz natural. Cuando necesites iluminación artificial, considera bombillas LED compatibles con tu luminaria y apaga las luces de espacios desocupados. Para comparar opciones, revisa la etiqueta de eficiencia y la potencia indicada en el empaque.',
+    fuente: 'Ministerio de Minas y Energía de Colombia', fuenteUrl: 'https://minenergia.gov.co/es/misional/eficiencia-energ%C3%A9tica/',
+    orden: 4, publicado: true,
+  },
+  {
+    slug: 'refrigerador-eficiente', categoria: 'consejo',
+    titulo: 'Cuida el uso de tu refrigerador',
+    resumen: 'La ubicación, el sello de la puerta y el tiempo abierta influyen en su funcionamiento.',
+    texto: 'Procura ubicar el refrigerador lejos de fuentes de calor y deja espacio para que circule el aire, según las indicaciones del fabricante. Revisa que el sello de la puerta cierre bien y evita mantenerla abierta mientras decides qué sacar. Consulta el manual para definir los ajustes de temperatura apropiados para tu equipo y tus alimentos.',
+    fuente: 'ENERGY STAR', fuenteUrl: 'https://www.energystar.gov/products/refrigerators',
+    orden: 5, publicado: true,
+  },
+  {
+    slug: 'climatizacion-responsable', categoria: 'informativo',
+    titulo: 'Usa la climatización con criterio',
+    resumen: 'Ajustes moderados y espacios bien cerrados ayudan a evitar consumo innecesario.',
+    texto: 'Si utilizas aire acondicionado, cierra puertas y ventanas del espacio climatizado y evita dejarlo funcionando en habitaciones vacías. Limpia los filtros de acuerdo con el manual del equipo. El Ministerio de Minas y Energía recomienda un ajuste entre 22 y 24 °C como referencia para el uso eficiente del aire acondicionado.',
+    fuente: 'Ministerio de Minas y Energía de Colombia', fuenteUrl: 'https://www.minenergia.gov.co/es/sala-de-prensa/noticias-index/gobierno-nacional-promueve-el-uso-eficiente-de-la-energia-ante-la-posible-llegada-del-fenomeno-de-el-nino-al-pais/',
+    orden: 6, publicado: true,
+  },
+  {
+    slug: 'interpreta-consumo', categoria: 'pregunta-frecuente',
+    titulo: '¿Cómo interpreto mis registros en EnerGest?',
+    resumen: 'Compara periodos equivalentes y ten en cuenta que una estimación no es una factura.',
+    texto: 'EnerGest organiza las lecturas que ingresas manualmente y calcula una referencia diaria aproximada a partir de potencia y horas de uso. No reemplaza el medidor ni la factura de tu proveedor. Para comparar, registra con frecuencia y condiciones parecidas; cambios en horarios, clima o cantidad de personas pueden explicar variaciones.',
+    fuente: 'UPME · Plan Energético Nacional 2024–2054', fuenteUrl: 'https://docs.upme.gov.co/DemandayEficiencia/Documents/PEN_2024_2054/PDF2_PE_Eficiencia_Energetica_Publicacion_Tomo_I.pdf',
+    orden: 7, publicado: true,
+  },
 ];
 
 async function inicializarContenido() {

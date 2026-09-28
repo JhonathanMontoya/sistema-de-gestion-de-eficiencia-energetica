@@ -42,7 +42,7 @@ async function actualizarContenido(req, res) {
     if (!mongoose.isValidObjectId(req.params.id)) {
       return res.status(400).json({ mensaje: 'El identificador no es válido' });
     }
-    const camposPermitidos = ['slug', 'categoria', 'titulo', 'resumen', 'texto', 'imagenUrl', 'orden', 'publicado'];
+    const camposPermitidos = ['slug', 'categoria', 'titulo', 'resumen', 'texto', 'imagenUrl', 'fuente', 'fuenteUrl', 'orden', 'publicado'];
     const cambios = Object.fromEntries(
       Object.entries(req.body).filter(([campo]) => camposPermitidos.includes(campo))
     );

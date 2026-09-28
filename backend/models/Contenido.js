@@ -13,6 +13,8 @@ const ContenidoSchema = new mongoose.Schema(
     resumen: { type: String, trim: true, maxlength: 240, default: '' },
     texto: { type: String, required: true, trim: true, maxlength: 4000 },
     imagenUrl: { type: String, trim: true, maxlength: 500, default: '' },
+    fuente: { type: String, trim: true, maxlength: 160, default: '' },
+    fuenteUrl: { type: String, trim: true, maxlength: 500, default: '' },
     orden: { type: Number, min: 0, default: 0 },
     publicado: { type: Boolean, default: false },
   },
