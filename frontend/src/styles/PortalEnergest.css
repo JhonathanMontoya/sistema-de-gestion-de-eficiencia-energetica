@@ -334,3 +334,20 @@
   .eg-costos-estimados { grid-template-columns: 1fr; }
   .eg-metricas--consumo { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
+
+/* Administración de contenido, dominios e imágenes */
+.eg-portada-imagen { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.eg-admin-vista-imagen { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.eg-admin-vista-imagen img { display: block; width: min(100%, 320px); max-height: 190px; border: 1px solid var(--eg-linea); border-radius: 12px; object-fit: cover; }
+.eg-admin-vista-imagen button { padding: 0; border: 0; background: transparent; font: 600 11px 'DM Sans',sans-serif; cursor: pointer; }
+.eg-panel--dominios { max-width: 760px; }
+.eg-panel--dominios > p { max-width: 650px; color: var(--eg-secundario); font-size: 13px; line-height: 1.6; }
+.eg-panel--dominios form { margin-top: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+.eg-panel--dominios label { width: 100%; display: flex; flex-direction: column; gap: 7px; color: #52675b; font-size: 12px; font-weight: 600; }
+.eg-panel--dominios textarea { width: 100%; padding: 12px; border: 1px solid #dfe8e1; border-radius: 10px; color: var(--eg-tinta); font: 13px 'DM Sans',sans-serif; resize: vertical; }
+.eg-dominios-actuales { display: flex; flex-wrap: wrap; gap: 7px; }
+.eg-dominios-actuales span { padding: 7px 10px; border: 1px solid #d9e9dc; border-radius: 999px; background: #f4faf4; color: var(--eg-verde); font-size: 11px; font-weight: 700; }
+
+.eg-info-card__imagen { display: block; width: 100%; height: 132px; margin-bottom: 13px; border-radius: 10px; object-fit: cover; }
+
+@media (max-width: 640px) { .eg-nav--publica .eg-tabs-navegacion { display: flex; } }

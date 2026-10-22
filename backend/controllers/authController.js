@@ -1,6 +1,23 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const ConfiguracionAcceso = require('../models/ConfiguracionAcceso');
+
+const DOMINIOS_POR_DEFECTO = ['gmail.com', 'unac.edu.co'];
+
+async function obtenerDominiosPermitidos() {
+  const configuracion = await ConfiguracionAcceso.findOne({ clave: 'registro' }).lean();
+  return configuracion?.dominios?.length ? configuracion.dominios : DOMINIOS_POR_DEFECTO;
+}
+
+async function listarDominios(req, res) {
+  try {
+    return res.json({ dominios: await obtenerDominiosPermitidos() });
+  } catch (error) {
+    console.error('[authController.listarDominios]', error);
+    return res.status(500).json({ mensaje: 'No se pudieron cargar los dominios permitidos' });
+  }
+}
 
 function generarToken(usuario) {
   return jwt.sign(
@@ -25,11 +42,11 @@ async function registrar(req, res) {
     }
 
     const correoNormalizado = email.trim().toLowerCase();
-    const dominioPermitido = ['gmail.com', 'unac.edu.co'].some((dominio) =>
-      correoNormalizado.endsWith(`@${dominio}`)
-    );
+    const partesCorreo = correoNormalizado.split('@');
+    const dominiosPermitidos = await obtenerDominiosPermitidos();
+    const dominioPermitido = partesCorreo.length === 2 && dominiosPermitidos.includes(partesCorreo[1]);
     if (!dominioPermitido) {
-      return res.status(400).json({ mensaje: 'Regístrate con un correo @gmail.com o @unac.edu.co' });
+      return res.status(400).json({ mensaje: `Usa un correo de estos dominios: ${dominiosPermitidos.map((dominio) => `@${dominio}`).join(', ')}` });
     }
 
     const existente = await User.findOne({ email: correoNormalizado });
@@ -131,4 +148,4 @@ async function perfil(req, res) {
   }
 }
 
-module.exports = { registrar, login, perfil };
+module.exports = { registrar, login, perfil, listarDominios };

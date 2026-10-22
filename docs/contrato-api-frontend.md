@@ -8,7 +8,7 @@ Este documento define las rutas que puede usar la interfaz. Todas las rutas usan
 - `analista`: se conserva para las cuentas existentes del Sprint 1 y puede consultar sus propios dispositivos, lecturas y resumen, sin editarlos.
 - `administrador`: administra el contenido editorial y los roles de usuarios; también puede gestionar sus propios datos. Los datos de dispositivos y lecturas siguen separados por cuenta.
 
-El registro público siempre entrega `cliente`, incluso si alguien intenta incluir otro rol en el cuerpo de la petición. Solo se aceptan correos cuyo dominio sea exactamente `gmail.com` o `unac.edu.co`; la API aplica esta validación además del formulario.
+El registro público siempre entrega `cliente`, incluso si alguien intenta incluir otro rol en el cuerpo de la petición. Los dominios permitidos se configuran en MongoDB; inicialmente son `gmail.com` y `unac.edu.co`. La API valida el dominio exacto al registrar y no acepta roles enviados por el navegador.
 
 ## Sesión
 
@@ -17,6 +17,7 @@ El registro público siempre entrega `cliente`, incluso si alguien intenta inclu
 | `POST /auth/register` | Público | Crear cuenta: `{ "nombre", "email", "password" }` |
 | `POST /auth/login` | Público | Iniciar sesión: `{ "email", "password" }` |
 | `GET /auth/perfil` | Sesión | Obtener el usuario autenticado |
+| `GET /auth/dominios` | Público | Obtener dominios actualmente permitidos para registro |
 
 Registro e inicio de sesión responden `{ mensaje, token, usuario: { id, nombre, email, rol } }`.
 
@@ -63,8 +64,16 @@ El endpoint público solo devuelve publicaciones visibles. El administrador pued
 | `POST /contenido` | Administrador | Crear contenido |
 | `PUT /contenido/:id` | Administrador | Editar contenido |
 | `DELETE /contenido/:id` | Administrador | Eliminar contenido |
+| `POST /contenido/imagenes` | Administrador | Subir una imagen binaria JPG, PNG o WebP (máximo 5 MB); responde `{ imagenUrl }` con una ruta `/uploads/...` servida por el backend |
 
-Campos de contenido: `{ slug, categoria, titulo, resumen, texto, imagenUrl, orden, publicado }`. Las categorías aceptadas son `portada`, `informativo`, `consejo` y `pregunta-frecuente`. El texto se almacena como texto simple, no HTML.
+Campos de contenido: `{ slug, categoria, titulo, resumen, texto, imagenUrl, fuente, fuenteUrl, orden, publicado }`. Las categorías aceptadas son `portada`, `informativo`, `consejo`, `pregunta-frecuente`, `cambio-eficiencia` y `beneficio-gestion`. El texto se almacena como texto simple, no HTML. Las imágenes subidas se guardan en `backend/uploads` (o en `UPLOADS_DIR` si se configura); el hosting debe conservar esa carpeta para persistirlas.
+
+## Configuración de registro
+
+| Método y ruta | Acceso | Uso |
+| --- | --- | --- |
+| `GET /configuracion/publica` | Público | Consultar `{ dominios }` |
+| `PUT /configuracion/dominios` | Administrador | Guardar `{ dominios: ["gmail.com", "unac.edu.co"] }`; se requiere al menos un dominio válido |
 
 ## Usuarios
 
@@ -75,9 +84,9 @@ Campos de contenido: `{ slug, categoria, titulo, resumen, texto, imagenUrl, orde
 
 ## Primer administrador y contenido inicial
 
-El registro público no puede crear administradores. Registra primero una cuenta normal y, desde `backend`, ejecuta `npm run promover-administrador -- correo@ejemplo.com` una sola vez para habilitar la administración.
+El registro público no puede crear administradores. Registra dos cuentas normales. Desde `backend`, ejecuta `npm run promover-administrador -- primer-correo@gmail.com segundo-correo@unac.edu.co`. El comando acepta uno o dos correos y solo promueve cuentas que ya existen.
 
-Para insertar textos de demostración en una base de datos vacía, ejecuta `npm run inicializar-contenido` desde `backend`. El script no reemplaza textos que ya existen. Después el administrador puede modificarlos desde la interfaz.
+Ejecuta `npm run inicializar-contenido` desde `backend` para insertar contenido público y las secciones educativas administrables que no existan. El script no reemplaza documentos existentes, por lo que puede volver a ejecutarse después de actualizar el proyecto. Después el administrador puede modificarlos desde la interfaz.
 
 ## Configuración local
 

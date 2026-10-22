@@ -5,7 +5,8 @@ EnerGest es una aplicación web académica para conocer y registrar el consumo e
 ## Estructura
 
 - `backend/config`: conexión con MongoDB.
-- `backend/models`: usuarios, dispositivos, lecturas y contenido editorial.
+- `backend/models`: usuarios, dispositivos, lecturas, contenido editorial y configuración de dominios.
+- `backend/uploads`: imágenes subidas desde la administración (se excluyen del control de versiones).
 - `backend/controllers` y `backend/routes`: lógica y endpoints de la API.
 - `backend/middleware`: autenticación y permisos por rol.
 - `frontend/src`: páginas, componentes y comunicación con la API.
@@ -29,7 +30,9 @@ El backend corre por defecto en `http://localhost:5000` y Vite en `http://localh
 
 El servidor valida permisos en cada petición. El cliente nunca puede asignarse el rol `administrador` enviando datos desde el navegador. Los dispositivos y lecturas se consultan por la cuenta autenticada.
 
-Para habilitar el primer administrador, primero registra una cuenta de manera normal y luego ejecuta, desde `backend`, `npm run promover-administrador -- correo@ejemplo.com`. Para añadir textos editoriales de demostración en una base vacía, ejecuta `npm run inicializar-contenido`. Ambos procesos usan la base indicada en `.env`.
+Para habilitar dos administradores, registra dos cuentas con correos permitidos. Promueve la primera desde `backend` con `npm run promover-administrador -- primer-correo@gmail.com segundo-correo@unac.edu.co`. El comando acepta uno o dos correos y solo promueve cuentas que ya existen. No hay contraseñas de administrador compartidas ni cuentas precreadas. Ejecuta `npm run inicializar-contenido` para insertar el contenido público de demostración y las secciones educativas editables que aún no existan; puedes volver a ejecutarlo después de actualizar el código, ya que no reemplaza textos existentes. Ambos procesos usan la base indicada en `.env`.
+
+En Administración → Dominios de registro puedes cambiar los dominios autorizados. La regla se guarda en MongoDB y la API la aplica al crear cuentas. Para subir imágenes, edita una publicación y selecciona JPG, PNG o WebP de hasta 5 MB; el archivo se guarda en `backend/uploads` y se publica al guardar la publicación. Esa carpeta está excluida de Git. En un despliegue, configura `UPLOADS_DIR` con la ruta de un volumen persistente para conservar los archivos entre actualizaciones o reinicios.
 
 ## API
 

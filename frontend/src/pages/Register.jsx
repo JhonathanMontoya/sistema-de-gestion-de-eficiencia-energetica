@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -12,9 +12,14 @@ export default function Register() {
   const [confirmarPassword, setConfirmarPassword] = useState('');
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [dominios, setDominios] = useState(['gmail.com', 'unac.edu.co']);
 
   const { iniciarSesion } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api.get('/auth/dominios').then(({ data }) => { if (Array.isArray(data.dominios) && data.dominios.length) setDominios(data.dominios); }).catch(() => {});
+  }, []);
 
   async function manejarEnvio(evento) {
     evento.preventDefault();
@@ -30,9 +35,10 @@ export default function Register() {
       return;
     }
 
-    const dominio = email.trim().toLowerCase().split('@').pop();
-    if (!['gmail.com', 'unac.edu.co'].includes(dominio)) {
-      setError('Usa un correo terminado en @gmail.com o @unac.edu.co.');
+    const partesCorreo = email.trim().toLowerCase().split('@');
+    const dominio = partesCorreo[partesCorreo.length - 1];
+    if (partesCorreo.length !== 2 || !dominios.includes(dominio)) {
+      setError(`Usa un correo de estos dominios: ${dominios.map((item) => `@${item}`).join(', ')}.`);
       return;
     }
 
@@ -44,7 +50,8 @@ export default function Register() {
       // que ademas haga login por separado.
       const respuesta = await api.post('/auth/register', { nombre, email, password });
       iniciarSesion(respuesta.data);
-      navigate('/dashboard');
+      const destino = new URLSearchParams(window.location.search).get('redirect');
+      navigate(['/consumo', '/dispositivos'].includes(destino) ? destino : '/consumo');
     } catch (err) {
       const mensaje =
         err.response?.data?.mensaje || 'No se pudo completar el registro. Intenta de nuevo.';
@@ -75,7 +82,7 @@ export default function Register() {
         <form className="auth__form" onSubmit={manejarEnvio} noValidate>
           <h2>Crear cuenta</h2>
           <p className="auth__form-sub">
-            Regístrate para acceder a Consumo y Dispositivos. Se aceptan correos @gmail.com y @unac.edu.co.
+            Regístrate para acceder a Consumo y Dispositivos. Dominios aceptados: {dominios.map((dominio) => `@${dominio}`).join(', ')}.
           </p>
 
           <label className="auth__label" htmlFor="nombre">
@@ -99,7 +106,7 @@ export default function Register() {
             id="email"
             type="email"
             className="auth__input"
-            placeholder="nombre@gmail.com o nombre@unac.edu.co"
+            placeholder={`nombre@${dominios[0] || 'dominio.com'}`}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="username"

@@ -7,7 +7,7 @@ const ContenidoSchema = new mongoose.Schema(
     categoria: {
       type: String,
       required: true,
-      enum: ['portada', 'informativo', 'consejo', 'pregunta-frecuente'],
+      enum: ['portada', 'informativo', 'consejo', 'pregunta-frecuente', 'cambio-eficiencia', 'beneficio-gestion'],
     },
     titulo: { type: String, required: true, trim: true, maxlength: 120 },
     resumen: { type: String, trim: true, maxlength: 240, default: '' },
