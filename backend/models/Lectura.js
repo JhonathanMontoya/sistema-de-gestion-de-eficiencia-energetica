@@ -15,6 +15,7 @@ const LecturaSchema = new mongoose.Schema(
       index: true,
     },
     consumoKwh: { type: Number, required: true, min: 0 },
+    horasUso: { type: Number, min: 0, max: 24, default: null },
     fecha: { type: Date, required: true, default: Date.now, index: true },
     nota: { type: String, trim: true, maxlength: 240, default: '' },
   },

@@ -8,7 +8,7 @@ Este documento define las rutas que puede usar la interfaz. Todas las rutas usan
 - `analista`: se conserva para las cuentas existentes del Sprint 1 y puede consultar sus propios dispositivos, lecturas y resumen, sin editarlos.
 - `administrador`: administra el contenido editorial y los roles de usuarios; también puede gestionar sus propios datos. Los datos de dispositivos y lecturas siguen separados por cuenta.
 
-El registro público siempre entrega `cliente`, incluso si alguien intenta incluir otro rol en el cuerpo de la petición.
+El registro público siempre entrega `cliente`, incluso si alguien intenta incluir otro rol en el cuerpo de la petición. Solo se aceptan correos cuyo dominio sea exactamente `gmail.com` o `unac.edu.co`; la API aplica esta validación además del formulario.
 
 ## Sesión
 
@@ -25,6 +25,7 @@ Registro e inicio de sesión responden `{ mensaje, token, usuario: { id, nombre,
 | Método y ruta | Acceso | Respuesta |
 | --- | --- | --- |
 | `GET /dashboard/resumen` | Sesión | `{ resumen: { totalDispositivos, consumoHoyKwh, consumoMesKwh, lecturasRecientes } }` |
+| `GET /lecturas/resumen-semanal` | Sesión | `{ desde, hasta, consumoTotalKwh, porDispositivo: [{ dispositivoId, nombre, consumoKwh, cantidadLecturas }] }` |
 
 Los consumos del resumen suman las lecturas guardadas por la cuenta autenticada. Si no hay datos, el total es `0` y las listas están vacías.
 
@@ -39,17 +40,17 @@ Todas estas rutas se limitan al dueño autenticado.
 | `PUT /dispositivos/:id` | Actualizar esos campos |
 | `DELETE /dispositivos/:id` | Archivar el dispositivo y conservar sus lecturas anteriores |
 
-Las categorías admitidas son `aire_acondicionado`, `nevera`, `iluminacion`, `computador`, `televisor`, `lavadora` y `otro`. La potencia se registra en watts y las horas de uso son de 0 a 24 por día. El servidor calcula `consumoEstimadoKwhDia` con la fórmula `(potenciaWatts × horasUsoDiarias) / 1000`. Se conservan también los campos `tipo` y `consumoEstimadoKwhDia` para clientes anteriores.
+Las categorías admitidas son `aire_acondicionado`, `nevera`, `iluminacion`, `computador`, `televisor`, `lavadora` y `otro`. La potencia se registra en watts y las horas de uso son de 0 a 24 por día. En la interfaz se sugieren potencias típicas y rangos por categoría como referencias orientativas, no como límites técnicos universales; el usuario puede editar la potencia para usar la que aparece en su equipo. El servidor calcula `consumoEstimadoKwhDia` con la fórmula `(potenciaWatts × horasUsoDiarias) / 1000`. Se conservan también los campos `tipo` y `consumoEstimadoKwhDia` para clientes anteriores.
 
-## Lecturas manuales
+## Lecturas de consumo
 
 | Método y ruta | Uso |
 | --- | --- |
-| `GET /lecturas` | Responde `{ lecturas: [...] }`, más recientes primero (máximo 200) |
+| `GET /lecturas` | Responde `{ lecturas: [...] }`, más recientes primero (máximo 200); cada registro incluye `horasUso` si se calculó desde horas |
 | `GET /lecturas?dispositivoId=...&desde=...&hasta=...` | Filtrar por dispositivo y rango de fechas ISO |
-| `POST /lecturas` | Crear `{ dispositivoId, consumoKwh, fecha, nota }`; `fecha` y `nota` son opcionales |
+| `POST /lecturas` | Crear una lectura medida con `{ dispositivoId, consumoKwh, fecha, nota }` o registrar un uso con `{ dispositivoId, horasUso, fecha, nota }`; la fecha y la nota son opcionales |
 
-Una lectura solo se acepta para un dispositivo activo del mismo usuario. `consumoKwh` debe ser un número igual o mayor que cero. Si se omite la fecha, se usa el momento actual.
+Una lectura solo se acepta para un dispositivo activo del mismo usuario. `consumoKwh` debe ser un número igual o mayor que cero. Si se envía `horasUso`, la API calcula y guarda `consumoKwh = potenciaWatts × horasUso / 1000`; las horas deben estar entre 0 y 24. Si se omite la fecha, se usa el momento actual. El resumen semanal acumula los registros de los últimos siete días y los agrupa por dispositivo.
 
 ## Contenido editorial
 

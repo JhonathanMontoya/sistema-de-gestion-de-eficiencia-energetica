@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { CATEGORIAS, buscarCategoria } from '../data/categoriasDispositivo';
-import { calcularKwh, formatearKwh } from '../utils/consumo';
+import NavegacionEnergest from '../components/NavegacionEnergest';
+import MarcoEnergest from '../components/MarcoEnergest';
+import { CAMBIOS_EFICIENCIA } from '../data/cambiosEficiencia';
+import { BENEFICIOS_GESTION } from '../data/beneficiosGestion';
 import '../styles/PortalEnergest.css';
 
 function ErrorMensaje({ children }) {
   return children ? <p className="eg-alerta" role="alert">{children}</p> : null;
 }
 
-function Cargando({ texto = 'Cargando información…' }) {
-  return <div className="eg-cargando" role="status"><span />{texto}</div>;
+function Cargando() {
+  return <div className="eg-cargando" role="status"><span />Cargando información…</div>;
+}
+
+function MarcoPrivado({ children, titulo, descripcion }) {
+  return <MarcoEnergest titulo={titulo} descripcion={descripcion}>{children}</MarcoEnergest>;
 }
 
 export function InicioEnergest() {
@@ -22,7 +28,7 @@ export function InicioEnergest() {
   useEffect(() => {
     api.get('/contenido')
       .then(({ data }) => setContenidos(data.contenidos || []))
-      .catch(() => setError('No pudimos cargar el contenido. Comprueba que el servidor esté activo.'));
+      .catch(() => setError('No pudimos cargar algunas publicaciones. Puedes seguir explorando la información general.'));
   }, []);
 
   const portada = contenidos.find((item) => item.categoria === 'portada');
@@ -37,33 +43,19 @@ export function InicioEnergest() {
 
   return (
     <div className="eg-publico">
-      <header className="eg-nav eg-nav--publica">
-        <Link className="eg-marca" to="/" aria-label="EnerGest, inicio">
-          <span className="eg-marca__icono">✳</span><span>Ener<strong>Gest</strong></span>
-        </Link>
-        <nav aria-label="Navegación principal">
-          <a href="#como-funciona">Cómo funciona</a>
-          <a href="#aprende">Aprende</a>
-        </nav>
-        <div className="eg-nav__acciones">
-          <Link className="eg-enlace" to="/login">Iniciar sesión</Link>
-          <Link className="eg-boton eg-boton--compacto" to="/register">Crear cuenta <span aria-hidden="true">↗</span></Link>
-        </div>
-      </header>
-
+      <NavegacionEnergest />
       <main>
         <section className="eg-hero">
           <div className="eg-hero__texto">
-            <span className="eg-etiqueta"><i /> Energía mejor entendida</span>
+            <span className="eg-etiqueta"><i /> Gestión energética para comprender tu consumo</span>
             <h1>{portada?.titulo || 'Conoce tu consumo. Elige qué mejorar.'}</h1>
-            <p>{portada?.resumen || 'Una forma sencilla de registrar tus equipos y entender cómo usan la energía.'}</p>
+            <p>{portada?.resumen || 'EnerGest te ayuda a registrar equipos, estimar su consumo a partir de la potencia y las horas de uso, y consultar cómo cambia con el tiempo.'}</p>
             <div className="eg-hero__acciones">
-              <Link className="eg-boton" to="/register">Empieza gratis <span aria-hidden="true">→</span></Link>
-              <a className="eg-enlace" href="#como-funciona">Conoce la plataforma ↓</a>
+              <Link className="eg-boton" to="/register">Crear una cuenta <span aria-hidden="true">→</span></Link>
+              <a className="eg-enlace" href="#como-funciona">Conoce cómo funciona ↓</a>
             </div>
-            <div className="eg-nota"><span className="eg-nota__punto">✓</span> Registro claro, datos bajo tu control</div>
+            <div className="eg-nota"><span className="eg-nota__punto">✓</span> La página de inicio es pública; tu consumo y tus dispositivos son privados.</div>
           </div>
-
           <div className="eg-ilustracion" aria-label="Ilustración de una planta eficiente" role="img">
             <div className="eg-ilustracion__sol" />
             <svg className="eg-ilustracion__dibujo" viewBox="0 0 560 430" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -80,7 +72,7 @@ export function InicioEnergest() {
               <path d="M449 79V127M425 103H473M432 86L466 120M466 86L432 120" stroke="#fff" strokeWidth="5" strokeLinecap="round" />
               <rect x="162" y="155" width="77" height="14" rx="7" fill="#E8B94F" />
             </svg>
-            <div className="eg-flotante eg-flotante--dato"><span>Consumo registrado</span><strong>+ claridad <i>↗</i></strong></div>
+            <div className="eg-flotante eg-flotante--dato"><span>Ejemplo de uso</span><strong>10 W × 5 h = 0,05 kWh</strong></div>
             <div className="eg-flotante eg-flotante--eco"><span className="eg-flotante__icono">✦</span><span>Pequeños cambios<br /><strong>hacen la diferencia</strong></span></div>
           </div>
         </section>
@@ -89,10 +81,20 @@ export function InicioEnergest() {
           <div className="eg-seccion-titulo"><span className="eg-etiqueta">Sencillo desde el primer día</span><h2>Tu energía, en tres pasos</h2></div>
           <div className="eg-pasos__grid">
             {[
-              ['01', 'Registra tus equipos', 'Organiza tus dispositivos por nombre, tipo y ubicación.'],
-              ['02', 'Anota una lectura', 'Ingresa manualmente el consumo en kWh cuando lo tengas.'],
-              ['03', 'Observa el cambio', 'Consulta tu historial y compara el consumo en el tiempo.'],
+              ['01', 'Registra un dispositivo', 'Elige su categoría e ingresa la potencia que aparece en la etiqueta. Puedes comenzar con un ejemplo guiado.'],
+              ['02', 'Anota las horas de uso', 'Indica cuánto tiempo lo utilizaste. EnerGest calcula una estimación en kWh con la potencia y las horas.'],
+              ['03', 'Consulta y compara', 'Guarda cada uso con su fecha y revisa el total de los últimos siete días, por equipo y en conjunto.'],
             ].map(([numero, titulo, texto]) => <article className="eg-paso" key={numero}><span>{numero}</span><h3>{titulo}</h3><p>{texto}</p></article>)}
+          </div>
+          <div className="eg-ejemplo-publico"><div><span className="eg-etiqueta">Ejemplo ya resuelto</span><h3>Bombillo LED de 10 W</h3><p>Si se usa durante 5 horas: (10 W × 5 h) ÷ 1000 = <strong>0,05 kWh estimados</strong>.</p></div><p>La potencia sugerida es orientativa. Usa el dato de la etiqueta de tu equipo cuando lo tengas. El cálculo no reemplaza una medición del medidor.</p></div>
+        </section>
+
+        <section className="eg-funciones-publicas">
+          <div className="eg-seccion-titulo"><span className="eg-etiqueta">Al crear tu cuenta</span><h2>Herramientas para entender tus equipos</h2></div>
+          <div className="eg-pasos__grid">
+            <article className="eg-paso"><span>01</span><h3>Inventario por dispositivo</h3><p>Registra nombre, categoría, potencia y horas habituales de uso.</p></article>
+            <article className="eg-paso"><span>02</span><h3>Consumo por uso y periodo</h3><p>Consulta el cálculo por hora y los usos que registraste por día, semana y mes; la proyección anual se identifica como estimada.</p></article>
+            <article className="eg-paso"><span>03</span><h3>Referencias de potencia</h3><p>Compara la potencia con un rango orientativo de la categoría, teniendo en cuenta que cada modelo puede variar.</p></article>
           </div>
         </section>
 
@@ -102,112 +104,23 @@ export function InicioEnergest() {
           </div>
           <ErrorMensaje>{error}</ErrorMensaje>
           {actual ? <article className="eg-carrusel" key={actual.slug}>
-            <div className="eg-carrusel__imagen" style={actual.imagenUrl ? { backgroundImage: `linear-gradient(0deg, #133d2aaa, transparent), url("${actual.imagenUrl}")` } : undefined}><span>ENERGEST · {actual.categoria.replace('-', ' ')}</span></div>
-            <div className="eg-carrusel__texto"><h3>{actual.titulo}</h3><p>{actual.resumen}</p><p>{actual.texto}</p>{actual.fuenteUrl && <a className="eg-enlace" href={actual.fuenteUrl} target="_blank" rel="noreferrer">Fuente: {actual.fuente || 'Consultar referencia'} ↗</a>}<div className="eg-carrusel__puntos">{destacados.map((item, i) => <button type="button" key={item.slug} className={i === indice ? 'activo' : ''} onClick={() => setIndice(i)} aria-label={`Ver contenido ${i + 1}`} aria-pressed={i === indice} />)}</div></div>
-          </article> : <p className="eg-vacio">El contenido informativo aparecerá aquí.</p>}
+            <div className="eg-carrusel__imagen" style={actual.imagenUrl ? { backgroundImage: 'linear-gradient(0deg, #133d2aaa, transparent), url("' + actual.imagenUrl + '")' } : undefined}><span>ENERGEST · {actual.categoria.replace('-', ' ')}</span></div>
+            <div className="eg-carrusel__texto"><h3>{actual.titulo}</h3><p>{actual.resumen}</p><p>{actual.texto}</p>{actual.fuenteUrl && <a className="eg-enlace" href={actual.fuenteUrl} target="_blank" rel="noreferrer">Fuente: {actual.fuente || 'Consultar referencia'} ↗</a>}<div className="eg-carrusel__puntos">{destacados.map((item, i) => <button type="button" key={item.slug} className={i === indice ? 'activo' : ''} onClick={() => setIndice(i)} aria-label={'Ver contenido ' + (i + 1)} aria-pressed={i === indice} />)}</div></div>
+          </article> : <p className="eg-vacio">El contenido informativo aparecerá aquí cuando esté publicado.</p>}
         </section>
 
-        <section className="eg-cta"><div><span className="eg-etiqueta">Tu información, organizada</span><h2>Empieza con lo que tienes hoy.</h2><p>Una cuenta gratuita te permite guardar tus equipos y construir un historial de consumo.</p></div><Link className="eg-boton eg-boton--claro" to="/register">Crear mi cuenta <span aria-hidden="true">→</span></Link></section>
+        <section className="eg-aprende eg-aprende--gerson">
+          <div className="eg-seccion-titulo"><span className="eg-etiqueta">Aprende sobre eficiencia energética</span><h2>Qué está cambiando y por qué importa</h2></div>
+          <div className="eg-info-grid">{CAMBIOS_EFICIENCIA.map((item) => <details className="eg-info-card" key={item.titulo}><summary><strong>{item.titulo}</strong><span>{item.descripcion}</span><small>Leer más</small></summary><p>{item.contenido}</p></details>)}</div>
+          <div className="eg-seccion-titulo eg-seccion-titulo--secundario"><span className="eg-etiqueta">Gestión energética</span><h2>Beneficios de gestionar mejor</h2></div>
+          <div className="eg-info-grid">{BENEFICIOS_GESTION.map((item) => <details className="eg-info-card" key={item.titulo}><summary><strong>{item.titulo}</strong><span>{item.descripcion}</span><small>Leer más</small></summary><p>{item.contenido}</p></details>)}</div>
+        </section>
+
+        <section className="eg-cta"><div><span className="eg-etiqueta">Tu información, organizada</span><h2>Empieza con lo que tienes hoy.</h2><p>Crea una cuenta para guardar tus dispositivos y construir un historial de consumo. Solo se aceptan correos @gmail.com y @unac.edu.co.</p></div><Link className="eg-boton eg-boton--claro" to="/register">Crear mi cuenta <span aria-hidden="true">→</span></Link></section>
       </main>
       <footer className="eg-footer"><Link className="eg-marca" to="/"><span className="eg-marca__icono">✳</span><span>Ener<strong>Gest</strong></span></Link><span>Gestión energética sencilla · Proyecto académico</span></footer>
     </div>
   );
-}
-
-function MarcoPrivado({ children, titulo, descripcion }) {
-  const { usuario, cerrarSesion } = useAuth();
-  const navigate = useNavigate();
-  function salir() { cerrarSesion(); navigate('/'); }
-  return <div className="eg-app"><header className="eg-nav eg-nav--privada">
-    <Link className="eg-marca" to="/dashboard"><span className="eg-marca__icono">✳</span><span>Ener<strong>Gest</strong></span></Link>
-    <nav aria-label="Menú de gestión">
-      <NavLink to="/dashboard">Resumen</NavLink><NavLink to="/dispositivos">Dispositivos</NavLink><NavLink to="/lecturas">Consumo</NavLink>
-      {usuario?.rol === 'administrador' && <NavLink to="/administrar">Administración</NavLink>}
-    </nav>
-    <div className="eg-cuenta"><div><strong>{usuario?.nombre}</strong><span>{usuario?.rol}</span></div><button className="eg-enlace" onClick={salir}>Salir</button></div>
-  </header><main className="eg-contenido"><div className="eg-pagina-titulo"><span className="eg-etiqueta">Tu espacio de energía</span><h1>{titulo}</h1><p>{descripcion}</p></div>{children}</main><footer className="eg-footer"><span>EnerGest</span><span>Los datos de tu cuenta son privados.</span></footer></div>;
-}
-
-export function PanelEnergest() {
-  const { usuario } = useAuth();
-  const [resumen, setResumen] = useState(null);
-  const [error, setError] = useState('');
-  useEffect(() => { api.get('/dashboard/resumen').then(({ data }) => setResumen(data.resumen)).catch(() => setError('No se pudo cargar el resumen. Intenta actualizar la página.')); }, []);
-  const recientes = resumen?.lecturasRecientes || [];
-  const maximo = Math.max(1, ...recientes.map((r) => r.consumoKwh));
-  return <MarcoPrivado titulo={`Hola, ${usuario?.nombre?.split(' ')[0] || 'bienvenido'}`} descripcion="Este es un resumen de los datos que has registrado.">
-    <ErrorMensaje>{error}</ErrorMensaje>{!resumen && !error ? <Cargando /> : <>
-      <section className="eg-metricas"><article className="eg-metrica eg-metrica--verde"><span>Dispositivos activos</span><strong>{resumen?.totalDispositivos ?? 0}</strong><small>En tu inventario</small></article><article className="eg-metrica"><span>Consumo de hoy</span><strong>{Number(resumen?.consumoHoyKwh || 0).toFixed(1)} <small>kWh</small></strong><small>Suma de lecturas de hoy</small></article><article className="eg-metrica eg-metrica--amarilla"><span>Consumo del mes</span><strong>{Number(resumen?.consumoMesKwh || 0).toFixed(1)} <small>kWh</small></strong><small>Desde el inicio del mes</small></article></section>
-      <div className="eg-columnas"><section className="eg-panel"><div className="eg-panel__cabecera"><div><span className="eg-etiqueta">Actividad</span><h2>Lecturas recientes</h2></div><Link className="eg-enlace" to="/lecturas">Ver historial →</Link></div>
-        {recientes.length ? <div className="eg-grafico" aria-label="Gráfico de las lecturas recientes">{[...recientes].reverse().map((lectura, i) => <div className="eg-barra" key={lectura._id || i} title={`${lectura.consumoKwh} kWh`}><span style={{ height: `${Math.max(8, (lectura.consumoKwh / maximo) * 100)}%` }} /><small>{new Date(lectura.fecha).toLocaleDateString('es', { day: 'numeric', month: 'short' })}</small></div>)}</div> : <div className="eg-vacio"><span>◌</span><strong>Aún no hay lecturas</strong><p>Cuando registres consumos, aquí podrás ver cómo evolucionan.</p><Link className="eg-boton eg-boton--compacto" to="/lecturas">Registrar lectura</Link></div>}
-      </section><aside className="eg-panel eg-panel--consejo"><span className="eg-consejo__icono">✦</span><span className="eg-etiqueta">Un buen comienzo</span><h2>Registra con regularidad</h2><p>Si anotas las lecturas en momentos parecidos, será más fácil comparar tus consumos.</p><Link className="eg-enlace" to="/lecturas">Añadir una lectura →</Link></aside></div>
-      <section className="eg-atajos"><Link to="/dispositivos"><span>＋</span><div><strong>Gestionar dispositivos</strong><small>Agrega o actualiza tus equipos</small></div><b>→</b></Link><Link to="/lecturas"><span>↗</span><div><strong>Registrar consumo</strong><small>Guarda una nueva lectura en kWh</small></div><b>→</b></Link></section>
-    </>}</MarcoPrivado>;
-}
-
-const FORM_DISPOSITIVO = { nombre: '', categoria: '', potenciaWatts: '', horasUsoDiarias: '', ubicacion: '' };
-export function DispositivosEnergest() {
-  const { usuario } = useAuth();
-  const puedeEditar = usuario?.rol !== 'analista';
-  const [dispositivos, setDispositivos] = useState([]);
-  const [formulario, setFormulario] = useState(FORM_DISPOSITIVO);
-  const [editando, setEditando] = useState('');
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState('');
-  const [mensaje, setMensaje] = useState('');
-  async function cargar() { setCargando(true); try { const { data } = await api.get('/dispositivos'); setDispositivos(data.dispositivos || []); setError(''); } catch { setError('No se pudieron cargar tus dispositivos.'); } finally { setCargando(false); } }
-  useEffect(() => { cargar(); }, []);
-  function cambiar(campo, valor) { setFormulario((actual) => ({ ...actual, [campo]: valor })); }
-  function editar(dispositivo) { setEditando(dispositivo._id); setFormulario({ nombre: dispositivo.nombre, categoria: dispositivo.categoria || 'otro', potenciaWatts: dispositivo.potenciaWatts ? String(dispositivo.potenciaWatts) : '', horasUsoDiarias: dispositivo.horasUsoDiarias ? String(dispositivo.horasUsoDiarias) : '', ubicacion: dispositivo.ubicacion || '' }); setMensaje(''); }
-  function limpiar() { setEditando(''); setFormulario(FORM_DISPOSITIVO); }
-  async function guardar(evento) { evento.preventDefault(); setError(''); setMensaje(''); const categoria = buscarCategoria(formulario.categoria); const potenciaWatts = Number(formulario.potenciaWatts); const horasUsoDiarias = Number(formulario.horasUsoDiarias); const datos = { ...formulario, tipo: categoria?.etiqueta || 'Otro', potenciaWatts, horasUsoDiarias, consumoEstimadoKwhDia: calcularKwh(potenciaWatts, horasUsoDiarias) }; try { if (editando) await api.put(`/dispositivos/${editando}`, datos); else await api.post('/dispositivos', datos); limpiar(); setMensaje(editando ? 'Cambios guardados.' : 'Dispositivo agregado.'); await cargar(); } catch (err) { setError(err.response?.data?.mensaje || 'Revisa los datos e inténtalo de nuevo.'); } }
-  async function eliminar(id) { if (!window.confirm('¿Quitar este dispositivo de tu lista? Sus lecturas anteriores se conservarán.')) return; try { await api.delete(`/dispositivos/${id}`); setMensaje('Dispositivo archivado; su historial se conserva.'); await cargar(); } catch (err) { setError(err.response?.data?.mensaje || 'No se pudo archivar el dispositivo.'); } }
-  return <MarcoPrivado titulo="Tus dispositivos" descripcion="Organiza tus equipos y guarda una referencia de su consumo diario estimado.">
-    <ErrorMensaje>{error}</ErrorMensaje>{mensaje && <p className="eg-exito" role="status">{mensaje}</p>}
-    <div className="eg-dispositivos-layout"><section className="eg-panel"><div className="eg-panel__cabecera"><div><span className="eg-etiqueta">Inventario personal</span><h2>Equipos registrados</h2></div><span className="eg-contador">{dispositivos.length}</span></div>
-      {cargando ? <Cargando /> : dispositivos.length ? <div className="eg-lista-dispositivos">{dispositivos.map((d) => <article className="eg-dispositivo" key={d._id}><span className="eg-dispositivo__icono">⌁</span><div className="eg-dispositivo__info"><strong>{d.nombre}</strong><span>{d.tipo || buscarCategoria(d.categoria)?.etiqueta || 'Otro'}{d.ubicacion ? ` · ${d.ubicacion}` : ''}</span></div><div className="eg-dispositivo__consumo"><strong>{Number(d.consumoEstimadoKwhDia).toLocaleString('es')} kWh</strong><small>{d.potenciaWatts ? `${d.potenciaWatts} W · ` : ''}estimados / día</small></div>{puedeEditar && <div className="eg-dispositivo__acciones"><button type="button" onClick={() => editar(d)}>Editar</button><button type="button" className="eg-texto-peligro" onClick={() => eliminar(d._id)}>Quitar</button></div>}</article>)}</div> : <div className="eg-vacio"><span>⌂</span><strong>Tu inventario está vacío</strong><p>Agrega tu primer equipo para empezar a organizar el consumo.</p></div>}
-    </section>
-    {puedeEditar && <form className="eg-panel eg-formulario" onSubmit={guardar}><span className="eg-etiqueta">{editando ? 'Actualizar equipo' : 'Nuevo equipo'}</span><h2>{editando ? 'Editar dispositivo' : 'Agregar dispositivo'}</h2>
-      <label>Nombre<input required maxLength="80" value={formulario.nombre} onChange={(e) => cambiar('nombre', e.target.value)} placeholder="Ej. Refrigerador principal" /></label>
-      <label>Categoría<select required value={formulario.categoria} onChange={(e) => { const seleccion = e.target.value; const sugerida = buscarCategoria(seleccion)?.wattsTipicos; cambiar('categoria', seleccion); if (!formulario.potenciaWatts && sugerida) cambiar('potenciaWatts', String(sugerida)); }}><option value="">Selecciona una categoría</option>{CATEGORIAS.map((categoria) => <option key={categoria.valor} value={categoria.valor}>{categoria.etiqueta}</option>)}</select></label>
-      <label>Potencia (W)<input required type="number" min="1" max="100000" step="1" value={formulario.potenciaWatts} onChange={(e) => cambiar('potenciaWatts', e.target.value)} placeholder="Ej. 200" /></label>
-      <label>Horas de uso al día<input required type="number" min="0" max="24" step="0.25" value={formulario.horasUsoDiarias} onChange={(e) => cambiar('horasUsoDiarias', e.target.value)} placeholder="Ej. 3" /></label>
-      <p className="eg-ayuda">Consumo estimado: {calcularKwh(formulario.potenciaWatts, formulario.horasUsoDiarias) !== null ? `${formatearKwh(calcularKwh(formulario.potenciaWatts, formulario.horasUsoDiarias))} al día` : 'indica potencia y horas para calcularlo'}.</p>
-      <label>Ubicación <span className="eg-opcional">Opcional</span><input maxLength="100" value={formulario.ubicacion} onChange={(e) => cambiar('ubicacion', e.target.value)} placeholder="Ej. Cocina" /></label>
-      <div className="eg-formulario__acciones"><button className="eg-boton" type="submit">{editando ? 'Guardar cambios' : 'Agregar equipo'}</button>{editando && <button type="button" className="eg-boton eg-boton--suave" onClick={limpiar}>Cancelar</button>}</div>
-    </form>}
-    {!puedeEditar && <aside className="eg-panel eg-panel--consejo"><span className="eg-etiqueta">Acceso de consulta</span><h2>Solo lectura</h2><p>Tu rol puede revisar el inventario. Un cliente de la cuenta puede crear o actualizar equipos.</p></aside>}
-    </div>
-  </MarcoPrivado>;
-}
-
-export function LecturasEnergest() {
-  const { usuario } = useAuth();
-  const puedeEditar = usuario?.rol !== 'analista';
-  const hoy = new Date();
-  const hoyTexto = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
-  const [dispositivos, setDispositivos] = useState([]);
-  const [lecturas, setLecturas] = useState([]);
-  const [formulario, setFormulario] = useState({ dispositivoId: '', consumoKwh: '', fecha: hoyTexto, nota: '' });
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState('');
-  const [mensaje, setMensaje] = useState('');
-  async function cargar() { setCargando(true); try { const [d, l] = await Promise.all([api.get('/dispositivos'), api.get('/lecturas')]); setDispositivos(d.data.dispositivos || []); setLecturas(l.data.lecturas || []); setError(''); } catch { setError('No se pudieron cargar tus lecturas.'); } finally { setCargando(false); } }
-  useEffect(() => { cargar(); }, []);
-  async function guardar(evento) { evento.preventDefault(); setError(''); setMensaje(''); try { await api.post('/lecturas', { ...formulario, consumoKwh: Number(formulario.consumoKwh), fecha: new Date(`${formulario.fecha}T12:00:00`).toISOString() }); setFormulario((f) => ({ ...f, consumoKwh: '', nota: '' })); setMensaje('Lectura guardada.'); await cargar(); } catch (err) { setError(err.response?.data?.mensaje || 'No se pudo guardar la lectura.'); } }
-  return <MarcoPrivado titulo="Historial de consumo" descripcion="Registra lecturas manuales y consulta el historial de tus equipos.">
-    <ErrorMensaje>{error}</ErrorMensaje>{mensaje && <p className="eg-exito" role="status">{mensaje}</p>}
-    <div className="eg-lecturas-layout">{puedeEditar && <form className="eg-panel eg-formulario" onSubmit={guardar}><span className="eg-etiqueta">Nueva lectura</span><h2>Registrar consumo</h2>
-      <label>Dispositivo<select required value={formulario.dispositivoId} onChange={(e) => setFormulario({ ...formulario, dispositivoId: e.target.value })}><option value="">Selecciona un equipo</option>{dispositivos.map((d) => <option key={d._id} value={d._id}>{d.nombre}</option>)}</select></label>
-      <label>Consumo medido (kWh)<input required type="number" min="0" step="0.01" value={formulario.consumoKwh} onChange={(e) => setFormulario({ ...formulario, consumoKwh: e.target.value })} placeholder="0.00" /></label>
-      <label>Fecha de lectura<input required type="date" max={hoyTexto} value={formulario.fecha} onChange={(e) => setFormulario({ ...formulario, fecha: e.target.value })} /></label>
-      <label>Nota <span className="eg-opcional">Opcional</span><textarea maxLength="240" rows="3" value={formulario.nota} onChange={(e) => setFormulario({ ...formulario, nota: e.target.value })} placeholder="Contexto para recordar esta lectura" /></label>
-      <button className="eg-boton" type="submit" disabled={!dispositivos.length}>Guardar lectura</button>{!dispositivos.length && <small>Primero agrega un dispositivo.</small>}
-    </form>}
-    <section className="eg-panel"><div className="eg-panel__cabecera"><div><span className="eg-etiqueta">Registro manual</span><h2>Lecturas anteriores</h2></div><span className="eg-contador">{lecturas.length}</span></div>
-      {cargando ? <Cargando /> : lecturas.length ? <div className="eg-tabla-wrap"><table className="eg-tabla"><thead><tr><th>Equipo</th><th>Fecha</th><th>Consumo</th><th>Nota</th></tr></thead><tbody>{lecturas.map((l) => <tr key={l._id}><td>{l.dispositivoId?.nombre || 'Equipo archivado'}</td><td>{new Date(l.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}</td><td><strong>{Number(l.consumoKwh).toLocaleString('es')} kWh</strong></td><td>{l.nota || '—'}</td></tr>)}</tbody></table></div> : <div className="eg-vacio"><span>◷</span><strong>No hay lecturas todavía</strong><p>Registra el primer dato para empezar a formar un historial.</p></div>}
-    </section></div>
-  </MarcoPrivado>;
 }
 
 const NUEVO_CONTENIDO = { slug: '', categoria: 'informativo', titulo: '', resumen: '', texto: '', imagenUrl: '', fuente: '', fuenteUrl: '', orden: 0, publicado: false };

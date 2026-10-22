@@ -28,7 +28,7 @@ async function crearDispositivo(req, res) {
       ? (potenciaWatts * horasUsoDiarias) / 1000
       : Number(req.body.consumoEstimadoKwhDia);
     if (typeof nombre !== 'string' || !nombre.trim() ||
-        (usaCalculoPorPotencia && (!Number.isFinite(potenciaWatts) || !Number.isFinite(horasUsoDiarias))) ||
+        (usaCalculoPorPotencia && (!Number.isFinite(potenciaWatts) || potenciaWatts <= 0 || !Number.isFinite(horasUsoDiarias))) ||
         (!usaCalculoPorPotencia && (typeof tipo !== 'string' || !tipo.trim() || req.body.consumoEstimadoKwhDia === undefined))) {
       return res.status(400).json({ mensaje: 'Revisa el nombre, categoría, potencia y horas de uso del dispositivo' });
     }
@@ -66,6 +66,9 @@ async function actualizarDispositivo(req, res) {
     );
     if (Object.keys(cambios).length === 0) {
       return res.status(400).json({ mensaje: 'No se recibieron datos para actualizar' });
+    }
+    if (cambios.potenciaWatts !== undefined && (!Number.isFinite(Number(cambios.potenciaWatts)) || Number(cambios.potenciaWatts) <= 0)) {
+      return res.status(400).json({ mensaje: 'La potencia del dispositivo debe ser mayor que cero' });
     }
     if (cambios.consumoEstimadoKwhDia === undefined &&
         (cambios.potenciaWatts !== undefined || cambios.horasUsoDiarias !== undefined)) {

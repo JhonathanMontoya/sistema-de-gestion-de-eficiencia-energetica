@@ -25,6 +25,13 @@ async function registrar(req, res) {
     }
 
     const correoNormalizado = email.trim().toLowerCase();
+    const dominioPermitido = ['gmail.com', 'unac.edu.co'].some((dominio) =>
+      correoNormalizado.endsWith(`@${dominio}`)
+    );
+    if (!dominioPermitido) {
+      return res.status(400).json({ mensaje: 'Regístrate con un correo @gmail.com o @unac.edu.co' });
+    }
+
     const existente = await User.findOne({ email: correoNormalizado });
     if (existente) {
       return res.status(409).json({ mensaje: 'Ya existe un usuario registrado con ese correo' });

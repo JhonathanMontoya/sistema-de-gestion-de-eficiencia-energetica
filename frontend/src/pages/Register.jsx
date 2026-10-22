@@ -30,6 +30,12 @@ export default function Register() {
       return;
     }
 
+    const dominio = email.trim().toLowerCase().split('@').pop();
+    if (!['gmail.com', 'unac.edu.co'].includes(dominio)) {
+      setError('Usa un correo terminado en @gmail.com o @unac.edu.co.');
+      return;
+    }
+
     setCargando(true);
 
     try {
@@ -69,7 +75,7 @@ export default function Register() {
         <form className="auth__form" onSubmit={manejarEnvio} noValidate>
           <h2>Crear cuenta</h2>
           <p className="auth__form-sub">
-            Regístrate para acceder al panel de gestión energética.
+            Regístrate para acceder a Consumo y Dispositivos. Se aceptan correos @gmail.com y @unac.edu.co.
           </p>
 
           <label className="auth__label" htmlFor="nombre">
@@ -93,7 +99,7 @@ export default function Register() {
             id="email"
             type="email"
             className="auth__input"
-            placeholder="analista@energest.com"
+            placeholder="nombre@gmail.com o nombre@unac.edu.co"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="username"

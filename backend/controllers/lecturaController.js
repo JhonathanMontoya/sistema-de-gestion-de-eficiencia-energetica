@@ -40,9 +40,10 @@ async function listarLecturas(req, res) {
 
 async function registrarLectura(req, res) {
   try {
-    const { dispositivoId, consumoKwh, fecha, nota = '' } = req.body;
-    if (!dispositivoId || consumoKwh === undefined) {
-      return res.status(400).json({ mensaje: 'Dispositivo y consumo en kWh son obligatorios' });
+    const { dispositivoId, consumoKwh, horasUso, fecha, nota = '' } = req.body;
+    const registrarPorHoras = horasUso !== undefined && horasUso !== null && horasUso !== '';
+    if (!dispositivoId || (!registrarPorHoras && consumoKwh === undefined)) {
+      return res.status(400).json({ mensaje: 'Selecciona un dispositivo e indica las horas de uso o el consumo en kWh' });
     }
     if (!mongoose.isValidObjectId(dispositivoId)) {
       return res.status(400).json({ mensaje: 'El identificador del dispositivo no es válido' });
@@ -55,6 +56,18 @@ async function registrarLectura(req, res) {
     if (!dispositivo) {
       return res.status(404).json({ mensaje: 'No se encontró un dispositivo activo de tu cuenta' });
     }
+    let consumoCalculado = Number(consumoKwh);
+    let horasRegistradas = null;
+    if (registrarPorHoras) {
+      horasRegistradas = Number(horasUso);
+      if (!Number.isFinite(horasRegistradas) || horasRegistradas < 0 || horasRegistradas > 24) {
+        return res.status(400).json({ mensaje: 'Las horas de uso deben estar entre 0 y 24' });
+      }
+      if (!Number.isFinite(dispositivo.potenciaWatts) || dispositivo.potenciaWatts <= 0) {
+        return res.status(400).json({ mensaje: 'Registra una potencia válida para este dispositivo antes de calcular su consumo' });
+      }
+      consumoCalculado = Math.round(((dispositivo.potenciaWatts * horasRegistradas) / 1000) * 1000) / 1000;
+    }
     const fechaLectura = fecha ? fechaValida(fecha) : new Date();
     if (!fechaLectura || fechaLectura === false || fechaLectura > new Date()) {
       return res.status(400).json({ mensaje: 'La fecha de la lectura no es válida' });
@@ -62,7 +75,8 @@ async function registrarLectura(req, res) {
     const lectura = await Lectura.create({
       usuarioId: req.usuarioId,
       dispositivoId,
-      consumoKwh,
+      consumoKwh: consumoCalculado,
+      horasUso: horasRegistradas,
       fecha: fechaLectura,
       nota,
     });
@@ -77,4 +91,24 @@ async function registrarLectura(req, res) {
   }
 }
 
-module.exports = { listarLecturas, registrarLectura };
+async function resumenSemanal(req, res) {
+  try {
+    const hasta = new Date();
+    const desde = new Date(hasta.getTime() - (7 * 24 * 60 * 60 * 1000));
+    const grupos = await Lectura.aggregate([
+      { $match: { usuarioId: new mongoose.Types.ObjectId(req.usuarioId), fecha: { $gte: desde, $lte: hasta } } },
+      { $group: { _id: '$dispositivoId', consumoKwh: { $sum: '$consumoKwh' }, cantidadLecturas: { $sum: 1 } } },
+      { $lookup: { from: Dispositivo.collection.name, localField: '_id', foreignField: '_id', as: 'dispositivo' } },
+      { $unwind: { path: '$dispositivo', preserveNullAndEmptyArrays: true } },
+      { $project: { _id: 0, dispositivoId: '$_id', nombre: { $ifNull: ['$dispositivo.nombre', 'Dispositivo archivado'] }, consumoKwh: 1, cantidadLecturas: 1 } },
+      { $sort: { consumoKwh: -1 } },
+    ]);
+    const consumoTotalKwh = Math.round(grupos.reduce((total, item) => total + item.consumoKwh, 0) * 1000) / 1000;
+    return res.json({ desde, hasta, consumoTotalKwh, porDispositivo: grupos });
+  } catch (error) {
+    console.error('[lecturaController.resumenSemanal]', error);
+    return res.status(500).json({ mensaje: 'No se pudo calcular el consumo de los últimos siete días' });
+  }
+}
+
+module.exports = { listarLecturas, registrarLectura, resumenSemanal };

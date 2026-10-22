@@ -63,7 +63,7 @@ export default function Login() {
             id="email"
             type="email"
             className="auth__input"
-            placeholder="analista@energest.com"
+            placeholder="tu correo registrado"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="username"

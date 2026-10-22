@@ -1,6 +1,6 @@
 # EnerGest
 
-EnerGest es una aplicación web académica para registrar dispositivos y lecturas de consumo energético. Usa React y Vite en el frontend, Express en el backend y MongoDB con Mongoose para guardar los datos.
+EnerGest es una aplicación web académica para conocer y registrar el consumo estimado de dispositivos. La página Inicio y el contenido educativo son públicos; Consumo y Dispositivos requieren una cuenta iniciada. Los usos se calculan desde la potencia en watts y las horas registradas, y se guardan en MongoDB con su fecha para consultar acumulados de siete días. Usa React y Vite en el frontend, Express en el backend y MongoDB con Mongoose para guardar los datos.
 
 ## Estructura
 
