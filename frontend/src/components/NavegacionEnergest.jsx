@@ -16,8 +16,8 @@ export default function NavegacionEnergest() {
       </Link>
       <nav className="eg-tabs-navegacion" aria-label="Secciones principales">
         <NavLink to="/" end>Inicio</NavLink>
-        <NavLink to="/consumo">Consumo</NavLink>
         <NavLink to="/dispositivos">Dispositivos</NavLink>
+        <NavLink to="/consumo">Consumo</NavLink>
       </nav>
       {estaAutenticado ? (
         <div className="eg-cuenta">

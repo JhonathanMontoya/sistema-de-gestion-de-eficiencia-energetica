@@ -91,6 +91,18 @@ async function registrarLectura(req, res) {
   }
 }
 
+async function eliminarLectura(req, res) {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ mensaje: 'El identificador de lectura no es válido' });
+    const lectura = await Lectura.findOneAndDelete({ _id: req.params.id, usuarioId: req.usuarioId });
+    if (!lectura) return res.status(404).json({ mensaje: 'No se encontró ese registro en tu cuenta' });
+    return res.json({ mensaje: 'Registro eliminado' });
+  } catch (error) {
+    console.error('[lecturaController.eliminarLectura]', error);
+    return res.status(500).json({ mensaje: 'No se pudo eliminar el registro' });
+  }
+}
+
 async function resumenSemanal(req, res) {
   try {
     const hasta = new Date();
@@ -111,4 +123,4 @@ async function resumenSemanal(req, res) {
   }
 }
 
-module.exports = { listarLecturas, registrarLectura, resumenSemanal };
+module.exports = { listarLecturas, registrarLectura, resumenSemanal, eliminarLectura };

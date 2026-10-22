@@ -51,7 +51,7 @@ export default function Register() {
       const respuesta = await api.post('/auth/register', { nombre, email, password });
       iniciarSesion(respuesta.data);
       const destino = new URLSearchParams(window.location.search).get('redirect');
-      navigate(['/consumo', '/dispositivos'].includes(destino) ? destino : '/consumo');
+      navigate(['/consumo', '/dispositivos'].includes(destino) ? destino : '/dispositivos');
     } catch (err) {
       const mensaje =
         err.response?.data?.mensaje || 'No se pudo completar el registro. Intenta de nuevo.';

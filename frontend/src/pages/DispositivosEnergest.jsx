@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import MarcoEnergest from '../components/MarcoEnergest';
 import TarjetaGrid from '../components/TarjetaGrid';
 import FichaDispositivo from '../components/FichaDispositivo';
+import DialogoConfirmacionEnergest from '../components/DialogoConfirmacionEnergest';
 import { CATEGORIAS, buscarCategoria } from '../data/categoriasDispositivo';
 import { calcularKwh, formatearKwh } from '../utils/consumo';
 
@@ -25,6 +26,7 @@ export default function DispositivosEnergest() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const [confirmacion, setConfirmacion] = useState(null);
 
   async function cargar() {
     setCargando(true);
@@ -43,7 +45,7 @@ export default function DispositivosEnergest() {
     }
   }
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => { (async () => { try { const respuesta = await api.post('/dispositivos/inicializar-ejemplos'); if (respuesta.data.creados) setMensaje(respuesta.data.mensaje); } catch {} await cargar(); })(); }, []);
 
   function cambiar(campo, valor) {
     setFormulario((actual) => ({ ...actual, [campo]: valor }));
@@ -105,7 +107,7 @@ export default function DispositivosEnergest() {
   }
 
   async function eliminar(dispositivo) {
-    if (!window.confirm('¿Quitar este dispositivo? Sus lecturas anteriores se conservarán.')) return;
+    setConfirmacion(dispositivo);
     setError('');
     try {
       await api.delete('/dispositivos/' + dispositivo._id);
@@ -126,6 +128,7 @@ export default function DispositivosEnergest() {
       meta: Number(dispositivo.horasUsoDiarias) > 0
         ? 'Estimado: ' + formatearKwh(Number(dispositivo.consumoEstimadoKwhDia) || 0) + ' al día'
         : 'Sin horas habituales; registra los usos para ver el consumo',
+      icono: ({ iluminacion: '💡', nevera: '🧊', aire_acondicionado: '❄️', computador: '💻', televisor: '📺', lavadora: '🫧' })[dispositivo.categoria] || '🔌',
       original: dispositivo,
     };
   }), [dispositivos]);
@@ -164,7 +167,7 @@ export default function DispositivosEnergest() {
             </div>
             <label>Nombre<input required maxLength="80" value={formulario.nombre} onChange={(e) => cambiar('nombre', e.target.value)} placeholder="Ej. Ventilador de habitación" /></label>
             <label>Categoría<select required value={formulario.categoria} onChange={(e) => seleccionarCategoria(e.target.value)}><option value="">Selecciona una categoría</option>{CATEGORIAS.map((categoria) => <option key={categoria.valor} value={categoria.valor}>{categoria.etiqueta}</option>)}</select></label>
-            <p className="eg-ayuda">La potencia sugerida es una referencia. Revisa la etiqueta o placa de tu dispositivo y puedes cambiarla.</p>
+            <small>La categoría agrupa equipos parecidos para sugerir watts y comparar su potencia con un rango típico.</small><p className="eg-ayuda">La potencia sugerida es una referencia. Revisa la etiqueta o placa de tu dispositivo y puedes cambiarla.</p>
             <label>Potencia (W)<input required type="number" min="1" max="100000" step="1" value={formulario.potenciaWatts} onChange={(e) => cambiar('potenciaWatts', e.target.value)} placeholder="Ej. 200" /></label>
             <label>Horas habituales al día <span className="eg-opcional">Opcional</span><input type="number" min="0" max="24" step="0.25" value={formulario.horasUsoDiarias} onChange={(e) => cambiar('horasUsoDiarias', e.target.value)} placeholder="Ej. 3" /></label>
             <p className="eg-ayuda">{Number(formulario.horasUsoDiarias) > 0 ? 'Consumo habitual estimado: ' + formatearKwh(calcularKwh(formulario.potenciaWatts, formulario.horasUsoDiarias)) + ' al día.' : 'Si no conoces tus horas habituales, déjalo vacío. Podrás registrar cada uso después desde la ficha del dispositivo.'}</p>
@@ -173,6 +176,7 @@ export default function DispositivosEnergest() {
           </form>
         ) : <aside className="eg-panel eg-panel--consejo"><span className="eg-etiqueta">Acceso de consulta</span><h2>Solo lectura</h2><p>Tu rol puede revisar el inventario. Un cliente de la cuenta puede crear o actualizar equipos.</p></aside>}
       </div>
+      <DialogoConfirmacionEnergest abierto={Boolean(confirmacion)} titulo="Quitar dispositivo" mensaje={confirmacion ? 'Se archivará ' + confirmacion.nombre + '. Sus lecturas anteriores se conservarán.' : ''} confirmar="Quitar dispositivo" peligro onCancelar={() => setConfirmacion(null)} onConfirmar={async () => { const dispositivo = confirmacion; setConfirmacion(null); if (!dispositivo) return; setError(''); try { await api.delete('/dispositivos/' + dispositivo._id); setMensaje('Dispositivo archivado; su historial se conserva.'); if (seleccionado?._id === dispositivo._id) setSeleccionado(null); await cargar(); } catch (err) { setError(err.response?.data?.mensaje || 'No se pudo archivar el dispositivo.'); } }} />
       {seleccionado && <FichaDispositivo
         dispositivo={seleccionado}
         consumoSemanal={resumenSemanal.porDispositivo?.find((item) => String(item.dispositivoId) === seleccionado._id)?.consumoKwh || 0}

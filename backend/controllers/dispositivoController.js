@@ -1,10 +1,32 @@
 const mongoose = require('mongoose');
 const Dispositivo = require('../models/Dispositivo');
+const User = require('../models/User');
 
 function idValido(id) {
   return mongoose.isValidObjectId(id);
 }
 
+async function inicializarEjemplos(req, res) {
+  const usuarioId = req.usuarioId;
+  try {
+    const usuario = await User.findOneAndUpdate({ _id: usuarioId, ejemplosDispositivosCreados: { $ne: true } }, { $set: { ejemplosDispositivosCreados: true } }, { new: true });
+    if (!usuario) return res.json({ creados: 0, mensaje: 'Los ejemplos ya fueron inicializados.' });
+    const existentes = await Dispositivo.find({ usuarioId, activo: true }).select('categoria');
+    const categorias = new Set(existentes.map((item) => item.categoria));
+    const ejemplos = [
+      { nombre: 'Bombillo LED de referencia', tipo: 'Iluminación', categoria: 'iluminacion', potenciaWatts: 10, horasUsoDiarias: 5, ubicacion: 'Ejemplo' },
+      { nombre: 'Nevera de referencia', tipo: 'Nevera', categoria: 'nevera', potenciaWatts: 200, horasUsoDiarias: 8, ubicacion: 'Ejemplo' },
+      { nombre: 'Aire acondicionado de referencia', tipo: 'Aire acondicionado', categoria: 'aire_acondicionado', potenciaWatts: 1200, horasUsoDiarias: 4, ubicacion: 'Ejemplo' },
+    ];
+    const faltantes = ejemplos.filter((item) => !categorias.has(item.categoria)).slice(0, Math.max(0, 3 - existentes.length));
+    if (faltantes.length) await Dispositivo.insertMany(faltantes.map((item) => ({ ...item, usuarioId, consumoEstimadoKwhDia: item.potenciaWatts * item.horasUsoDiarias / 1000, activo: true })));
+    return res.status(201).json({ creados: faltantes.length, mensaje: faltantes.length ? 'Se agregaron dispositivos de ejemplo para guiarte.' : 'Tu inventario ya tiene tres o más dispositivos.' });
+  } catch (error) {
+    await User.updateOne({ _id: usuarioId }, { $set: { ejemplosDispositivosCreados: false } }).catch(() => {});
+    console.error('[dispositivoController.inicializarEjemplos]', error);
+    return res.status(500).json({ mensaje: 'No se pudieron preparar los dispositivos de ejemplo.' });
+  }
+}
 async function listarDispositivos(req, res) {
   try {
     const dispositivos = await Dispositivo.find({ usuarioId: req.usuarioId, activo: true })
@@ -117,4 +139,4 @@ async function eliminarDispositivo(req, res) {
   }
 }
 
-module.exports = { listarDispositivos, crearDispositivo, actualizarDispositivo, eliminarDispositivo };
+module.exports = { listarDispositivos, crearDispositivo, actualizarDispositivo, eliminarDispositivo, inicializarEjemplos };

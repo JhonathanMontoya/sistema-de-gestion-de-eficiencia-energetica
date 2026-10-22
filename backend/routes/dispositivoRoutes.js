@@ -6,12 +6,14 @@ const {
   crearDispositivo,
   actualizarDispositivo,
   eliminarDispositivo,
+  inicializarEjemplos,
 } = require('../controllers/dispositivoController');
 
 const router = express.Router();
 
 router.use(protegerRuta);
 router.get('/', listarDispositivos);
+router.post('/inicializar-ejemplos', inicializarEjemplos);
 router.post('/', permitirRoles('cliente', 'administrador'), crearDispositivo);
 router.put('/:id', permitirRoles('cliente', 'administrador'), actualizarDispositivo);
 router.delete('/:id', permitirRoles('cliente', 'administrador'), eliminarDispositivo);

@@ -4,7 +4,7 @@ export default function TarjetaGrid({ items, renderAcciones }) {
     <div className="eg-tarjeta-grid">
       {items.map((item) => (
         <article className="eg-tarjeta" key={item.id}>
-          <span className="eg-tarjeta__icono" aria-hidden="true">⌁</span>
+          <span className="eg-tarjeta__icono eg-tarjeta__icono--animado" aria-hidden="true">{item.icono || "⌁"}</span>
           <div className="eg-tarjeta__contenido">
             <h3>{item.titulo}</h3>
             <p>{item.descripcion}</p>

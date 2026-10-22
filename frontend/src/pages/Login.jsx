@@ -23,7 +23,7 @@ export default function Login() {
       const respuesta = await api.post('/auth/login', { email, password });
       iniciarSesion(respuesta.data);
       const destino = new URLSearchParams(window.location.search).get('redirect');
-      navigate(['/consumo', '/dispositivos'].includes(destino) ? destino : '/consumo');
+      navigate(['/consumo', '/dispositivos'].includes(destino) ? destino : '/dispositivos');
     } catch (err) {
       const mensaje =
         err.response?.data?.mensaje || 'No se pudo iniciar sesion. Intenta de nuevo.';

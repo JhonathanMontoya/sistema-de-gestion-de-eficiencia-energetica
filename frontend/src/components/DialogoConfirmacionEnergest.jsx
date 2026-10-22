@@ -1,0 +1,4 @@
+export default function DialogoConfirmacionEnergest({ abierto, titulo = '¿Confirmas esta acción?', mensaje, confirmar = 'Continuar', cancelar = 'Cancelar', peligro = false, onConfirmar, onCancelar }) {
+  if (!abierto) return null;
+  return <div className="eg-modal-fondo" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancelar(); }}><section className="eg-confirmacion" role="alertdialog" aria-modal="true" aria-labelledby="eg-confirmacion-titulo"><span className="eg-etiqueta">Confirmación</span><h2 id="eg-confirmacion-titulo">{titulo}</h2><p>{mensaje}</p><div className="eg-confirmacion__acciones"><button type="button" className="eg-boton eg-boton--suave" onClick={onCancelar}>{cancelar}</button><button type="button" className={'eg-boton ' + (peligro ? 'eg-boton--peligro' : '')} onClick={onConfirmar}>{confirmar}</button></div></section></div>;
+}

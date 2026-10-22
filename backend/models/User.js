@@ -29,6 +29,7 @@ const UserSchema = new mongoose.Schema(
       enum: ['administrador', 'analista', 'cliente'],
       default: 'cliente',
     },
+    ejemplosDispositivosCreados: { type: Boolean, default: false },
   },
   { timestamps: true } // agrega createdAt y updatedAt automaticamente
 );
