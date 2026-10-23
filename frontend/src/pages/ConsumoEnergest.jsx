@@ -19,10 +19,7 @@ export default function ConsumoEnergest() {
   const { usuario } = useAuth();
   const puedeRegistrar = usuario?.rol !== 'analista';
   const [dispositivos, setDispositivos] = useState([]);
-  const [resumen, setResumen] = useState(null);
-  const [semana, setSemana] = useState({ porDispositivo: [], consumoTotalKwh: 0 });
   const [lecturas, setLecturas] = useState([]);
-  const [lecturasMes, setLecturasMes] = useState([]);
   const [formulario, setFormulario] = useState({ dispositivoId: '', horasUso: '', fecha: fechaHoy(), nota: '' });
   const [tarifa, setTarifa] = useState(() => localStorage.getItem('energia_tarifa_cop_kwh') || TARIFA_INICIAL_COP);
   const [cargando, setCargando] = useState(true);
@@ -36,19 +33,13 @@ export default function ConsumoEnergest() {
     setCargando(true);
     try {
       try { await api.post('/dispositivos/inicializar-ejemplos'); } catch {}
-      const [respuestaResumen, respuestaSemana, respuestaDispositivos] = await Promise.all([
-        api.get('/dashboard/resumen'),
-        api.get('/lecturas/resumen-semanal'),
+      const desdeHistorial = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const [respuestaDispositivos, respuestaLecturas] = await Promise.all([
         api.get('/dispositivos'),
+        api.get('/lecturas', { params: { desde: desdeHistorial } }),
       ]);
-      const rango = respuestaSemana.data;
-      const inicioMes = new Date(); inicioMes.setDate(1); inicioMes.setHours(0,0,0,0);
-      const [respuestaLecturas, respuestaLecturasMes] = await Promise.all([api.get('/lecturas', { params: { desde: rango.desde } }), api.get('/lecturas', { params: { desde: inicioMes.toISOString() } })]);
-      setResumen(respuestaResumen.data.resumen);
-      setSemana(rango);
       setDispositivos(respuestaDispositivos.data.dispositivos || []);
       setLecturas(respuestaLecturas.data.lecturas || []);
-      setLecturasMes(respuestaLecturasMes.data.lecturas || []);
       setError('');
     } catch (err) {
       setError(err.response?.data?.mensaje || 'No se pudieron cargar los datos de consumo. Intenta actualizar la página.');
@@ -67,13 +58,13 @@ export default function ConsumoEnergest() {
     ? calcularKwh(dispositivoSeleccionado.potenciaWatts, formulario.horasUso)
     : null;
   const idsIncluidos = dispositivosIncluidos === null ? dispositivos.map((item) => item._id) : dispositivosIncluidos;
-  const porDispositivoSeleccionado = (semana.porDispositivo || []).filter((item) => idsIncluidos.includes(String(item.dispositivoId)));
-  const consumoSemana = porDispositivoSeleccionado.reduce((total, item) => total + (Number(item.consumoKwh) || 0), 0);
-  const hoyLocal = fechaHoy();
-  const consumoHoySeleccionado = lecturas.filter((l) => idsIncluidos.includes(String(l.dispositivoId?._id)) && new Date(l.fecha).toLocaleDateString('en-CA') === hoyLocal).reduce((s,l)=>s+(Number(l.consumoKwh)||0),0);
-  const consumoMesSeleccionado = lecturasMes.filter((l) => idsIncluidos.includes(String(l.dispositivoId?._id))).reduce((s,l)=>s+(Number(l.consumoKwh)||0),0);
-  const proyeccionAnual = consumoSemana * (365 / 7);
-  const potenciaTotal = dispositivos.filter((item) => idsIncluidos.includes(item._id)).reduce((total, dispositivo) => total + (Number(dispositivo.potenciaWatts) || 0), 0);
+  function horasActualizadas(dispositivo) { return dispositivo._id === formulario.dispositivoId && formulario.horasUso !== '' ? Number(formulario.horasUso) : Number(dispositivo.horasUsoDiarias) || 0; }
+  const dispositivosSeleccionados = dispositivos.filter((item) => idsIncluidos.includes(item._id));
+  const consumoDiarioEstimado = dispositivosSeleccionados.reduce((total, dispositivo) => total + (calcularKwh(dispositivo.potenciaWatts, horasActualizadas(dispositivo)) || 0), 0);
+  const consumoSemana = consumoDiarioEstimado * 7;
+  const consumoMesSeleccionado = consumoDiarioEstimado * 30;
+  const proyeccionAnual = consumoDiarioEstimado * 365;
+  const potenciaTotal = dispositivosSeleccionados.reduce((total, dispositivo) => total + (Number(dispositivo.potenciaWatts) || 0), 0);
   const consumoUnaHora = potenciaTotal / 1000;
   const tarifaNumero = Number(tarifa);
 
@@ -83,13 +74,14 @@ export default function ConsumoEnergest() {
     setMensaje('');
     setGuardando(true);
     try {
+      if (dispositivoSeleccionado) await api.put('/dispositivos/' + dispositivoSeleccionado._id, { horasUsoDiarias: Number(formulario.horasUso) });
       await api.post('/lecturas', {
         dispositivoId: formulario.dispositivoId,
         horasUso: Number(formulario.horasUso),
         fecha: new Date(formulario.fecha + 'T12:00:00').toISOString(),
         nota: formulario.nota,
       });
-      setFormulario((actual) => ({ ...actual, horasUso: '', nota: '' }));
+      setFormulario((actual) => ({ ...actual, horasUso: String(Number(formulario.horasUso)), nota: '' }));
       setMensaje('Uso guardado. Ya aparece en el historial y en el acumulado semanal.');
       await cargar();
     } catch (err) {
@@ -115,20 +107,20 @@ export default function ConsumoEnergest() {
       {error && <p className="eg-alerta" role="alert">{error}</p>}
       {cargando && <div className="eg-cargando" role="status"><span />Actualizando consumos…</div>}
       <section className="eg-metricas eg-metricas--consumo">
-        <article className="eg-metrica eg-metrica--verde"><span>Consumo registrado hoy</span><strong>{consumoHoySeleccionado.toLocaleString('es-CO', { maximumFractionDigits: 3 })} <small>kWh</small></strong><small>Suma de los usos guardados hoy</small></article>
-        <article className="eg-metrica"><span>Últimos 7 días</span><strong>{consumoSemana.toLocaleString('es-CO', { maximumFractionDigits: 3 })} <small>kWh</small></strong><small>Suma de tus registros fechados</small></article>
-        <article className="eg-metrica eg-metrica--amarilla"><span>Consumo del mes</span><strong>{consumoMesSeleccionado.toLocaleString('es-CO', { maximumFractionDigits: 3 })} <small>kWh</small></strong><small>Suma desde el inicio del mes</small></article>
-        <article className="eg-metrica"><span>Proyección anual</span><strong>{proyeccionAnual.toLocaleString('es-CO', { maximumFractionDigits: 1 })} <small>kWh</small></strong><small>Estimación: promedio de estos 7 días × 365</small></article>
-        <article className="eg-metrica"><span>Por una hora de uso</span><strong>{consumoUnaHora.toLocaleString('es-CO', { maximumFractionDigits: 3 })} <small>kWh</small></strong><small>Si todos tus equipos operan 1 hora a su potencia registrada</small></article>
+        <article className="eg-metrica eg-metrica--verde"><span>Consumo diario estimado</span><strong>{consumoDiarioEstimado.toLocaleString('es-CO', { maximumFractionDigits: 3 })} <small>kWh</small></strong><small>Según watts y horas habituales de los dispositivos incluidos</small></article>
+        <article className="eg-metrica"><span>7 días estimados</span><strong>{consumoSemana.toLocaleString('es-CO', { maximumFractionDigits: 3 })} <small>kWh</small></strong><small>Proyección diaria × 7, según los dispositivos incluidos</small></article>
+        <article className="eg-metrica eg-metrica--amarilla"><span>30 días estimados</span><strong>{consumoMesSeleccionado.toLocaleString('es-CO', { maximumFractionDigits: 3 })} <small>kWh</small></strong><small>Proyección diaria × 30, según los dispositivos incluidos</small></article>
+        <article className="eg-metrica"><span>Proyección anual</span><strong>{proyeccionAnual.toLocaleString('es-CO', { maximumFractionDigits: 1 })} <small>kWh</small></strong><small>Proyección diaria × 365</small></article>
+        <article className="eg-metrica"><span>Por una hora de uso</span><strong>{consumoUnaHora.toLocaleString('es-CO', { maximumFractionDigits: 3 })} <small>kWh</small></strong><small>Si los dispositivos incluidos operan 1 hora a su potencia registrada</small></article>
       </section>
 
       <div className="eg-columnas eg-columnas--consumo">
         {puedeRegistrar ? (
           <form className="eg-panel eg-formulario" onSubmit={registrarUso}>
-            <span className="eg-etiqueta">Nuevo registro</span><h2>¿Cuánto usaste un equipo?</h2>
-            <p className="eg-ayuda">Usamos la potencia guardada y las horas que indiques: (W × horas) / 1000.</p>
-            <label>Dispositivo<select required value={formulario.dispositivoId} onChange={(e) => setFormulario((actual) => ({ ...actual, dispositivoId: e.target.value }))}><option value="">Selecciona un dispositivo</option>{dispositivos.map((dispositivo) => <option key={dispositivo._id} value={dispositivo._id}>{dispositivo.nombre} · {dispositivo.potenciaWatts} W</option>)}</select></label>
-            <label>Horas de uso<input required type="number" min="0" max="24" step="0.25" value={formulario.horasUso} onChange={(e) => setFormulario((actual) => ({ ...actual, horasUso: e.target.value }))} placeholder="Ej. 2.5" /></label>
+            <span className="eg-etiqueta">Uso del dispositivo</span><h2>Actualiza horas y registra un uso</h2>
+            <p className="eg-ayuda">Se cargan las horas habituales guardadas en Dispositivos. Puedes modificarlas aquí; al guardar, se actualizan en el dispositivo y se registra ese uso con la fecha y nota. La fecha organiza el historial; no cambia el estimado general. Fórmula: (W × horas) / 1000.</p>
+            <label>Dispositivo<select required value={formulario.dispositivoId} onChange={(e) => { const id=e.target.value; const d=dispositivos.find((item)=>item._id===id); setFormulario((actual) => ({ ...actual, dispositivoId: id, horasUso: d ? String(d.horasUsoDiarias ?? '') : '' })); }}><option value="">Selecciona un dispositivo</option>{dispositivos.map((dispositivo) => <option key={dispositivo._id} value={dispositivo._id}>{dispositivo.nombre} · {dispositivo.potenciaWatts} W</option>)}</select></label>
+            <label>Horas habituales al día<input required type="number" min="0" max="24" step="0.25" value={formulario.horasUso} onChange={(e) => setFormulario((actual) => ({ ...actual, horasUso: e.target.value }))} placeholder="Ej. 2.5" /></label>
             <label>Fecha de uso<input required type="date" max={fechaHoy()} value={formulario.fecha} onChange={(e) => setFormulario((actual) => ({ ...actual, fecha: e.target.value }))} /></label>
             <label>Nota <span className="eg-opcional">Opcional</span><input maxLength="240" value={formulario.nota} onChange={(e) => setFormulario((actual) => ({ ...actual, nota: e.target.value }))} placeholder="Ej. uso por la tarde" /></label>
             <p className="eg-ayuda">Consumo estimado de este uso: {estimadoUso !== null ? formatearKwh(estimadoUso) : 'elige un dispositivo e indica las horas'}.</p>
@@ -137,20 +129,24 @@ export default function ConsumoEnergest() {
           </form>
         ) : <aside className="eg-panel eg-panel--consejo"><span className="eg-etiqueta">Acceso de consulta</span><h2>Registro de consumo</h2><p>Tu rol puede consultar los consumos. Una cuenta cliente puede registrar nuevos usos.</p></aside>}
 
-        <section className="eg-panel">
-          <div className="eg-panel__cabecera"><div><span className="eg-etiqueta">Acumulado por equipo</span><h2>Últimos siete días</h2></div></div>
-          {porDispositivoSeleccionado.length ? <div className="eg-consumo-equipos">{porDispositivoSeleccionado.map((item) => <article className="eg-consumo-equipo" key={item.dispositivoId}><div><strong>{item.nombre}</strong><small>{item.cantidadLecturas} {item.cantidadLecturas === 1 ? 'registro' : 'registros'}</small></div><b>{formatearKwh(item.consumoKwh)}</b></article>)}<div className="eg-consumo-total"><span>Total semanal</span><strong>{formatearKwh(consumoSemana)}</strong></div></div> : <div className="eg-vacio"><span>◷</span><strong>Sin registros en los últimos siete días</strong><p>Guarda el primer uso de uno de tus dispositivos para empezar a acumular consumo.</p></div>}
+        <section className="eg-panel eg-inclusion eg-inclusion--fichas">
+          <div className="eg-panel__cabecera"><div><span className="eg-etiqueta">Equipos para el cálculo</span><h2>Selecciona los dispositivos</h2></div><span className="eg-contador">{idsIncluidos.length}/{dispositivos.length}</span></div>
+          <p className="eg-ayuda">Selecciona las fichas que quieras incluir. La selección actualiza los totales de consumo y su estimación de costo.</p>
+          {dispositivos.length ? <div className="eg-tarjeta-grid">{dispositivos.map((d) => <label className={'eg-tarjeta eg-tarjeta--seleccionable ' + (idsIncluidos.includes(d._id) ? 'eg-tarjeta--incluida' : '')} key={d._id}>
+            <input className="eg-tarjeta__selector" type="checkbox" checked={idsIncluidos.includes(d._id)} onChange={() => alternarDispositivo(d._id)} aria-label={'Incluir ' + d.nombre + ' en los cálculos'} />
+            <span className="eg-tarjeta__icono eg-tarjeta__icono--animado" aria-hidden="true">{({ iluminacion: '💡', nevera: '🧊', aire_acondicionado: '❄️', computador: '💻', televisor: '📺', lavadora: '🫧' })[d.categoria] || '🔌'}</span>
+            <div className="eg-tarjeta__contenido"><h3>{d.nombre}</h3><p>{d.potenciaWatts} W · {horasActualizadas(d)} h/día</p><strong className="eg-tarjeta__meta">Estimado diario: {formatearKwh(calcularKwh(d.potenciaWatts,horasActualizadas(d)) ?? 0)}</strong></div>
+            <span className="eg-tarjeta__estado">{idsIncluidos.includes(d._id) ? 'Incluido' : 'Excluido'}</span>
+          </label>)}</div> : <div className="eg-vacio"><strong>No hay dispositivos activos</strong><p>Agrega un dispositivo en la pestaña Dispositivos para empezar.</p></div>}
         </section>
       </div>
 
-      <section className="eg-panel eg-inclusion"><div className="eg-panel__cabecera"><div><span className="eg-etiqueta">Elige qué sumar</span><h2>Equipos incluidos en los totales</h2></div></div><p className="eg-ayuda">Desactiva una tarjeta para excluir ese equipo del acumulado semanal, la proyección y el consumo por una hora.</p><div className="eg-inclusion__grid">{dispositivos.map((d) => <label className={'eg-inclusion__item ' + (idsIncluidos.includes(d._id) ? 'incluido' : '')} key={d._id}><input type="checkbox" checked={idsIncluidos.includes(d._id)} onChange={() => alternarDispositivo(d._id)} /><span><strong>{d.nombre}</strong><small>{d.potenciaWatts} W</small></span></label>)}</div></section>
-
       <section className="eg-panel eg-panel--tarifa">
-        <div><span className="eg-etiqueta">Opcional y editable</span><h2>Consumo en relación con el costo</h2><p>Estimación basada en los consumos mostrados y la tarifa editable. No reemplaza el valor de la factura. Operación: consumo en kWh × tarifa en COP/kWh = costo estimado en COP. La tarifa se guarda en este navegador.</p></div>
+        <div><span className="eg-etiqueta">Opcional y editable</span><h2>Consumo en relación con el costo</h2><p>Estimación del uso habitual de los dispositivos seleccionados multiplicada por la tarifa editable. No reemplaza el valor de la factura. Operación: consumo estimado en kWh × tarifa en COP/kWh = costo estimado en COP. La fecha de cada registro solo organiza el historial y no afecta estos totales. La tarifa se guarda en este navegador.</p></div>
         <label>Tarifa editable (COP/kWh)<input type="number" min="0" step="1" value={tarifa} onChange={(e) => actualizarTarifa(e.target.value)} /></label>
         <div className="eg-costos-estimados">
-          <article><span>Hoy</span><strong>{pesos(consumoHoySeleccionado * tarifaNumero)}</strong><small>{consumoHoySeleccionado.toLocaleString('es-CO')} kWh × {pesos(tarifaNumero)}/kWh</small></article>
-          <article><span>Últimos 7 días (equipos incluidos)</span><strong>{pesos(consumoSemana * tarifaNumero)}</strong><small>{consumoSemana.toLocaleString('es-CO')} kWh × {pesos(tarifaNumero)}/kWh</small></article>
+          <article><span>Un día estimado</span><strong>{pesos(consumoDiarioEstimado * tarifaNumero)}</strong><small>{consumoDiarioEstimado.toLocaleString('es-CO')} kWh × {pesos(tarifaNumero)}/kWh</small></article>
+          <article><span>7 días estimados</span><strong>{pesos(consumoSemana * tarifaNumero)}</strong><small>{consumoSemana.toLocaleString('es-CO')} kWh × {pesos(tarifaNumero)}/kWh</small></article>
           <article><span>Proyección anual</span><strong>{pesos(proyeccionAnual * tarifaNumero)}</strong><small>{proyeccionAnual.toLocaleString('es-CO', { maximumFractionDigits: 1 })} kWh × {pesos(tarifaNumero)}/kWh</small></article>
         </div>
       </section>

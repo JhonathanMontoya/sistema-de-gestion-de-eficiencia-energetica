@@ -386,3 +386,11 @@
 .eg-auditoria article strong { font-size: 12px; }
 @media (max-width: 760px) { .eg-admin-cuentas { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .eg-tarjeta__icono--animado { animation: none; } }
+
+.eg-inclusion--fichas .eg-tarjeta { position: relative; grid-template-columns: 42px minmax(0,1fr); align-items: start; padding: 14px; padding-right: 42px; cursor: pointer; transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+.eg-inclusion--fichas .eg-tarjeta:hover { transform: translateY(-2px); border-color: #b4d5bd; }
+.eg-inclusion--fichas .eg-tarjeta--incluida { border-color: #8dbd9a; background: #f3faf4; }
+.eg-tarjeta__selector { position: absolute; top: 14px; right: 14px; width: 17px; height: 17px; accent-color: var(--eg-verde); cursor: pointer; }
+.eg-tarjeta__estado { grid-column: 1 / -1; color: var(--eg-verde); font-size: 10px; font-weight: 700; }
+.eg-tarjeta--seleccionable:not(.eg-tarjeta--incluida) .eg-tarjeta__estado { color: #7b8980; }
+.eg-inclusion--fichas .eg-tarjeta__meta { font-size: 10px; }
