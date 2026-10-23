@@ -132,6 +132,8 @@ async function eliminarDispositivo(req, res) {
       { new: true }
     );
     if (!dispositivo) return res.status(404).json({ mensaje: 'Dispositivo no encontrado' });
+    const dispositivosActivos = await Dispositivo.countDocuments({ usuarioId: req.usuarioId, activo: true });
+    if (dispositivosActivos === 0) await User.updateOne({ _id: req.usuarioId }, { $set: { ejemplosDispositivosCreados: false } });
     return res.json({ mensaje: 'Dispositivo eliminado de la lista' });
   } catch (error) {
     console.error('[dispositivoController.eliminarDispositivo]', error);

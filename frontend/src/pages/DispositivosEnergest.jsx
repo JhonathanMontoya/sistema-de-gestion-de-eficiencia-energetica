@@ -106,12 +106,19 @@ export default function DispositivosEnergest() {
     }
   }
 
-  async function eliminar(dispositivo) {
+  function eliminar(dispositivo) {
     setConfirmacion(dispositivo);
+  }
+
+  async function confirmarEliminacion() {
+    const dispositivo = confirmacion;
+    setConfirmacion(null);
+    if (!dispositivo) return;
     setError('');
     try {
       await api.delete('/dispositivos/' + dispositivo._id);
-      setMensaje('Dispositivo archivado; su historial se conserva.');
+      await api.post('/dispositivos/inicializar-ejemplos');
+      setMensaje('Dispositivo archivado. Si el inventario quedó vacío, se prepararon tres ejemplos. El historial anterior se conserva.');
       if (seleccionado?._id === dispositivo._id) setSeleccionado(null);
       await cargar();
     } catch (err) {
@@ -176,7 +183,7 @@ export default function DispositivosEnergest() {
           </form>
         ) : <aside className="eg-panel eg-panel--consejo"><span className="eg-etiqueta">Acceso de consulta</span><h2>Solo lectura</h2><p>Tu rol puede revisar el inventario. Un cliente de la cuenta puede crear o actualizar equipos.</p></aside>}
       </div>
-      <DialogoConfirmacionEnergest abierto={Boolean(confirmacion)} titulo="Quitar dispositivo" mensaje={confirmacion ? 'Se archivará ' + confirmacion.nombre + '. Sus lecturas anteriores se conservarán.' : ''} confirmar="Quitar dispositivo" peligro onCancelar={() => setConfirmacion(null)} onConfirmar={async () => { const dispositivo = confirmacion; setConfirmacion(null); if (!dispositivo) return; setError(''); try { await api.delete('/dispositivos/' + dispositivo._id); setMensaje('Dispositivo archivado; su historial se conserva.'); if (seleccionado?._id === dispositivo._id) setSeleccionado(null); await cargar(); } catch (err) { setError(err.response?.data?.mensaje || 'No se pudo archivar el dispositivo.'); } }} />
+      <DialogoConfirmacionEnergest abierto={Boolean(confirmacion)} titulo="Quitar dispositivo" mensaje={confirmacion ? 'Se archivará ' + confirmacion.nombre + '. Sus lecturas anteriores se conservarán.' : ''} confirmar="Quitar dispositivo" peligro onCancelar={() => setConfirmacion(null)} onConfirmar={confirmarEliminacion} />
       {seleccionado && <FichaDispositivo
         dispositivo={seleccionado}
         consumoSemanal={resumenSemanal.porDispositivo?.find((item) => String(item.dispositivoId) === seleccionado._id)?.consumoKwh || 0}
