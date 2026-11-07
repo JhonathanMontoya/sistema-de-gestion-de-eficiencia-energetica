@@ -1,16 +1,21 @@
 # EnerGest
 
-EnerGest es una aplicación web académica para conocer y registrar el consumo estimado de dispositivos. La página Inicio y el contenido educativo son públicos; Consumo y Dispositivos requieren una cuenta iniciada. Los usos se calculan desde la potencia en watts y las horas registradas, y se guardan en MongoDB con su fecha para consultar acumulados de siete días. Usa React y Vite en el frontend, Express en el backend y MongoDB con Mongoose para guardar los datos.
+EnerGest es una aplicación web académica para registrar el consumo total del hogar y estimar el consumo de dispositivos. La página Inicio y el contenido educativo son públicos; Consumo y Dispositivos requieren una cuenta iniciada. Las lecturas del hogar se registran por periodo a partir de factura o medidor; los usos de dispositivos se estiman desde la potencia en watts y las horas registradas. Usa React y Vite en el frontend, Express en el backend y MongoDB con Mongoose para guardar los datos.
 
 ## Estructura
 
 - `backend/config`: conexión con MongoDB.
-- `backend/models`: usuarios, dispositivos, lecturas, contenido editorial y configuración de dominios.
+- `backend/models`: usuarios, dispositivos, lecturas por aparato y del hogar, preferencias energéticas, contenido editorial y configuración de dominios.
 - `backend/uploads`: imágenes subidas desde la administración (se excluyen del control de versiones).
-- `backend/controllers` y `backend/routes`: lógica y endpoints de la API.
+- `backend/routes`: endpoints y middleware de acceso.
+- `backend/controllers`: adaptadores HTTP que validan el formato de la solicitud y traducen resultados/errores a respuestas.
+- `backend/services`: casos de uso, reglas de aplicación y acceso a modelos Mongoose por capacidad.
+- `backend/domain/energia`: reglas puras de cálculo y validación energética.
 - `backend/middleware`: autenticación y permisos por rol.
 - `frontend/src`: páginas, componentes y comunicación con la API.
 - `docs/contrato-api-frontend.md`: rutas y formatos de datos acordados para la interfaz.
+- `docs/contrato-preferencias-energeticas.md`: tarifa y límites de consumo guardados por cuenta.
+- `docs/contrato-alertas.md`: reglas de comparación y avisos de consumo dentro de la aplicación.
 
 ## Puesta en marcha local
 
@@ -18,17 +23,19 @@ EnerGest es una aplicación web académica para conocer y registrar el consumo e
 2. Copia `backend/.env.example` a `backend/.env` y completa localmente `MONGO_URI` y `JWT_SECRET`. No subas el `.env` al repositorio.
 3. En una terminal, desde `backend`, inicia el servidor con `npm run dev`.
 4. En otra terminal, desde `frontend`, inicia Vite con `npm run dev`.
+
+Para verificar las reglas puras del dominio energético, ejecuta `npm test` desde `backend` (Node.js 20 o posterior).
 5. Abre la dirección local que muestra Vite.
 
 El backend corre por defecto en `http://localhost:5000` y Vite en `http://localhost:5173`. `frontend/.env.example` permite cambiar la URL de API; el valor predeterminado funciona con ese backend local.
 
 ## Roles
 
-- `cliente`: rol asignado en el registro público; administra sus propios dispositivos y lecturas.
+- `cliente`: rol asignado en el registro público; administra sus propios dispositivos y lecturas por aparato y del hogar.
 - `analista`: se conserva para las cuentas existentes y puede consultar sus propios datos sin editarlos.
-- `administrador`: gestiona contenido editorial y roles de cuentas.
+- `administrador`: gestiona contenido editorial, configuración de registro y cuentas (nombre, correo y rol). Puede eliminar una cuenta junto con sus dispositivos, lecturas por aparato y del hogar, y auditorías asociadas; no puede consultar ni modificar consumos de otras cuentas.
 
-El servidor valida permisos en cada petición. El cliente nunca puede asignarse el rol `administrador` enviando datos desde el navegador. Los dispositivos y lecturas se consultan por la cuenta autenticada.
+El servidor valida permisos en cada petición. El cliente nunca puede asignarse el rol `administrador` enviando datos desde el navegador. Las rutas personales consultan dispositivos y lecturas usando la cuenta autenticada; las rutas administrativas no exponen consumos ajenos.
 
 Para habilitar dos administradores, registra dos cuentas con correos permitidos. Promueve la primera desde `backend` con `npm run promover-administrador -- primer-correo@gmail.com segundo-correo@unac.edu.co`. El comando acepta uno o dos correos y solo promueve cuentas que ya existen. No hay contraseñas de administrador compartidas ni cuentas precreadas. Ejecuta `npm run inicializar-contenido` para insertar el contenido público de demostración y las secciones educativas editables que aún no existan; puedes volver a ejecutarlo después de actualizar el código, ya que no reemplaza textos existentes. Ambos procesos usan la base indicada en `.env`.
 

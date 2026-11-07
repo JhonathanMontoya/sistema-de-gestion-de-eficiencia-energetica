@@ -45,7 +45,7 @@ export default function DispositivosEnergest() {
     }
   }
 
-  useEffect(() => { (async () => { try { const respuesta = await api.post('/dispositivos/inicializar-ejemplos'); if (respuesta.data.creados) setMensaje(respuesta.data.mensaje); } catch {} await cargar(); })(); }, []);
+  useEffect(() => { cargar(); }, []);
 
   function cambiar(campo, valor) {
     setFormulario((actual) => ({ ...actual, [campo]: valor }));
@@ -117,8 +117,7 @@ export default function DispositivosEnergest() {
     setError('');
     try {
       await api.delete('/dispositivos/' + dispositivo._id);
-      await api.post('/dispositivos/inicializar-ejemplos');
-      setMensaje('Dispositivo archivado. Si el inventario quedó vacío, se prepararon tres ejemplos. El historial anterior se conserva.');
+      setMensaje('Dispositivo archivado. El historial anterior se conserva.');
       if (seleccionado?._id === dispositivo._id) setSeleccionado(null);
       await cargar();
     } catch (err) {

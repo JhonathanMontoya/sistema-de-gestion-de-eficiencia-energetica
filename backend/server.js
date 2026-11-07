@@ -5,6 +5,10 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const dispositivoRoutes = require('./routes/dispositivoRoutes');
 const lecturaRoutes = require('./routes/lecturaRoutes');
+const lecturaHogarRoutes = require('./routes/lecturaHogarRoutes');
+const preferenciasEnergeticasRoutes = require('./routes/preferenciasEnergeticasRoutes');
+const alertasRoutes = require('./routes/alertasRoutes');
+const recomendacionesRoutes = require('./routes/recomendacionesRoutes');
 const contenidoRoutes = require('./routes/contenidoRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
@@ -14,7 +18,7 @@ const path = require('path');
 const app = express();
 
 // Middlewares base
-const origenesPermitidos = (process.env.FRONTEND_URL || 'http://localhost:5173,http://localhost:4173')
+const origenesPermitidos = (process.env.FRONTEND_URL || 'http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173,http://127.0.0.1:4173')
   .split(',')
   .map((origen) => origen.trim());
 app.use(cors({ origin: origenesPermitidos }));
@@ -26,6 +30,10 @@ app.use('/uploads', express.static(carpetaImagenes, { fallthrough: false, maxAge
 app.use('/api/auth', authRoutes);
 app.use('/api/dispositivos', dispositivoRoutes);
 app.use('/api/lecturas', lecturaRoutes);
+app.use('/api/lecturas-hogar', lecturaHogarRoutes);
+app.use('/api/preferencias-energeticas', preferenciasEnergeticasRoutes);
+app.use('/api/alertas', alertasRoutes);
+app.use('/api/recomendaciones', recomendacionesRoutes);
 app.use('/api/contenido', contenidoRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/usuarios', usuarioRoutes);

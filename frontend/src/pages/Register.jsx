@@ -70,11 +70,11 @@ export default function Register() {
             Ener<span>Gest</span>
           </h1>
           <p className="auth__tagline">
-            Crea tu cuenta para empezar a monitorear el consumo energético de
-            tu operación.
+            Crea tu cuenta para registrar los aparatos de tu hogar y consultar
+            estimaciones y lecturas de consumo.
           </p>
           <OndaDeCarga />
-          <span className="auth__caption">Carga en tiempo real — planta demo</span>
+          <span className="auth__caption">Estimaciones y lecturas registradas por ti</span>
         </div>
       </section>
 

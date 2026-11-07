@@ -3,189 +3,50 @@ const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const Contenido = require('../models/Contenido');
 
+// Esta base sirve para instalaciones nuevas. $setOnInsert conserva cualquier
+// cambio editorial que un administrador ya haya guardado desde la aplicación.
 const CONTENIDO_INICIAL = [
-  {
-    slug: 'bienvenida',
-    categoria: 'portada',
-    titulo: 'Usar mejor la energía empieza por conocerla',
-    resumen: 'Registra tus equipos, lleva lecturas sencillas y descubre cómo cambia tu consumo.',
-    texto: 'EnerGest reúne en un solo lugar tus dispositivos y su consumo registrado. Empieza con una lectura manual y construye un historial útil para tomar mejores decisiones.',
-    orden: 1,
-    publicado: true,
-  },
-  {
-    slug: 'pequenos-cambios',
-    categoria: 'informativo',
-    titulo: 'Pequeños cambios también cuentan',
-    resumen: 'Un registro constante ayuda a reconocer hábitos y oportunidades de ahorro.',
-    texto: 'Anotar el consumo de tus equipos con regularidad te permite comparar periodos, detectar variaciones y evaluar si una acción de ahorro está dando resultado.',
-    orden: 2,
-    publicado: true,
-  },
-  {
-    slug: 'consejo-registro',
-    categoria: 'consejo',
-    titulo: 'Consejo para empezar',
-    resumen: 'Registra las lecturas en horarios parecidos para que la comparación sea más clara.',
-    texto: 'Cuando sea posible, registra el consumo bajo condiciones similares. Así podrás comparar mejor las lecturas entre días y entender qué cambios pueden explicar una diferencia.',
-    orden: 3,
-    publicado: true,
-  },
-  {
-    slug: 'iluminacion-led', categoria: 'informativo',
-    titulo: 'Aprovecha la luz y elige bombillas eficientes',
-    resumen: 'La iluminación eficiente empieza con hábitos sencillos y equipos adecuados.',
-    texto: 'Abre cortinas y persianas durante el día para aprovechar la luz natural. Cuando necesites iluminación artificial, considera bombillas LED compatibles con tu luminaria y apaga las luces de espacios desocupados. Para comparar opciones, revisa la etiqueta de eficiencia y la potencia indicada en el empaque.',
-    fuente: 'Ministerio de Minas y Energía de Colombia', fuenteUrl: 'https://minenergia.gov.co/es/misional/eficiencia-energ%C3%A9tica/',
-    orden: 4, publicado: true,
-  },
-  {
-    slug: 'refrigerador-eficiente', categoria: 'consejo',
-    titulo: 'Cuida el uso de tu refrigerador',
-    resumen: 'La ubicación, el sello de la puerta y el tiempo abierta influyen en su funcionamiento.',
-    texto: 'Procura ubicar el refrigerador lejos de fuentes de calor y deja espacio para que circule el aire, según las indicaciones del fabricante. Revisa que el sello de la puerta cierre bien y evita mantenerla abierta mientras decides qué sacar. Consulta el manual para definir los ajustes de temperatura apropiados para tu equipo y tus alimentos.',
-    fuente: 'ENERGY STAR', fuenteUrl: 'https://www.energystar.gov/products/refrigerators',
-    orden: 5, publicado: true,
-  },
-  {
-    slug: 'climatizacion-responsable', categoria: 'informativo',
-    titulo: 'Usa la climatización con criterio',
-    resumen: 'Ajustes moderados y espacios bien cerrados ayudan a evitar consumo innecesario.',
-    texto: 'Si utilizas aire acondicionado, cierra puertas y ventanas del espacio climatizado y evita dejarlo funcionando en habitaciones vacías. Limpia los filtros de acuerdo con el manual del equipo. El Ministerio de Minas y Energía recomienda un ajuste entre 22 y 24 °C como referencia para el uso eficiente del aire acondicionado.',
-    fuente: 'Ministerio de Minas y Energía de Colombia', fuenteUrl: 'https://www.minenergia.gov.co/es/sala-de-prensa/noticias-index/gobierno-nacional-promueve-el-uso-eficiente-de-la-energia-ante-la-posible-llegada-del-fenomeno-de-el-nino-al-pais/',
-    orden: 6, publicado: true,
-  },
-  {
-    slug: 'interpreta-consumo', categoria: 'pregunta-frecuente',
-    titulo: '¿Cómo interpreto mis registros en EnerGest?',
-    resumen: 'Compara periodos equivalentes y ten en cuenta que una estimación no es una factura.',
-    texto: 'EnerGest organiza las lecturas que ingresas manualmente y calcula una referencia diaria aproximada a partir de potencia y horas de uso. No reemplaza el medidor ni la factura de tu proveedor. Para comparar, registra con frecuencia y condiciones parecidas; cambios en horarios, clima o cantidad de personas pueden explicar variaciones.',
-    fuente: 'UPME · Plan Energético Nacional 2024–2054', fuenteUrl: 'https://docs.upme.gov.co/DemandayEficiencia/Documents/PEN_2024_2054/PDF2_PE_Eficiencia_Energetica_Publicacion_Tomo_I.pdf',
-    orden: 7, publicado: true,
-  },
-  ...[
-    {
-      "slug": "tendencia-1",
-      "categoria": "cambio-eficiencia",
-      "titulo": "Precios de la energía",
-      "resumen": "Los precios cambian constantemente; controlar el consumo ayuda a evitar gastos innecesarios.",
-      "texto": "Los precios de la energía pueden cambiar constantemente. Por eso, controlar el consumo ayuda a evitar gastos innecesarios. Una buena gestión permite saber dónde se está gastando más, así es más fácil tomar decisiones y ahorrar.",
-      "orden": 20,
-      "publicado": true
-    },
-    {
-      "slug": "tendencia-2",
-      "categoria": "cambio-eficiencia",
-      "titulo": "Nuevas normas ambientales",
-      "resumen": "Cada vez existen más normas sobre consumo energético y reducción de emisiones.",
-      "texto": "Cada vez existen más normas relacionadas con el consumo de energía. Las organizaciones deben buscar formas de ser más eficientes. También es importante reducir las emisiones y el impacto ambiental. La gestión energética ayuda a avanzar en estos objetivos.",
-      "orden": 21,
-      "publicado": true
-    },
-    {
-      "slug": "tendencia-3",
-      "categoria": "cambio-eficiencia",
-      "titulo": "Equipos e instalaciones",
-      "resumen": "Los equipos antiguos pueden consumir más energía de la necesaria.",
-      "texto": "Los equipos antiguos pueden consumir más energía de la necesaria. Revisarlos permite encontrar problemas y oportunidades de mejora. Cambiar o mantener adecuadamente estos equipos puede reducir el consumo y mejorar el funcionamiento de las instalaciones.",
-      "orden": 22,
-      "publicado": true
-    },
-    {
-      "slug": "tendencia-4",
-      "categoria": "cambio-eficiencia",
-      "titulo": "Medidores inteligentes",
-      "resumen": "Permiten conocer mejor el consumo y detectar cambios fuera de lo normal.",
-      "texto": "Los medidores inteligentes permiten conocer mejor el consumo de energía. La información obtenida ayuda a encontrar cambios o consumos fuera de lo normal. También permite comparar el consumo en diferentes momentos, con estos datos es más fácil tomar decisiones.",
-      "orden": 23,
-      "publicado": true
-    },
-    {
-      "slug": "tendencia-5",
-      "categoria": "cambio-eficiencia",
-      "titulo": "Movilidad eléctrica",
-      "resumen": "El transporte avanza hacia vehículos eléctricos, cambiando el uso de la energía.",
-      "texto": "El transporte está avanzando hacia el uso de vehículos eléctricos. Esto está cambiando la forma en que utilizamos la energía. También aumenta la necesidad de contar con puntos de carga. La movilidad eléctrica es una parte importante de la transición energética.",
-      "orden": 24,
-      "publicado": true
-    },
-    {
-      "slug": "tendencia-6",
-      "categoria": "cambio-eficiencia",
-      "titulo": "Ciudades inteligentes",
-      "resumen": "Buscan utilizar la energía de forma más eficiente mediante tecnología.",
-      "texto": "Las ciudades buscan utilizar la energía de una manera más eficiente. La tecnología permite controlar mejor diferentes sistemas y servicios, y también facilita el uso de fuentes de energía alternativas. El objetivo es lograr ciudades más eficientes y sostenibles.",
-      "orden": 25,
-      "publicado": true
-    },
-    {
-      "slug": "beneficio-1",
-      "categoria": "beneficio-gestion",
-      "titulo": "Ahorro de costes",
-      "resumen": "Controlar el consumo ayuda a detectar gastos innecesarios y reducir costos.",
-      "texto": "Controlar el consumo ayuda a detectar gastos innecesarios. Al reducir el uso de energía, también pueden reducirse los costos. Esto permite aprovechar mejor el presupuesto de la organización, y el ahorro puede utilizarse en otros proyectos o necesidades.",
-      "orden": 30,
-      "publicado": true
-    },
-    {
-      "slug": "beneficio-2",
-      "categoria": "beneficio-gestion",
-      "titulo": "Mayor sostenibilidad",
-      "resumen": "Usar la energía de forma eficiente ayuda a cuidar el medio ambiente.",
-      "texto": "Usar la energía de forma eficiente ayuda a cuidar el medio ambiente. Menos consumo puede significar menos emisiones. También se puede combinar con energías renovables, avanzando así hacia una operación más sostenible.",
-      "orden": 31,
-      "publicado": true
-    },
-    {
-      "slug": "beneficio-3",
-      "categoria": "beneficio-gestion",
-      "titulo": "Mejor imagen",
-      "resumen": "Las acciones de eficiencia energética mejoran la percepción de clientes y colaboradores.",
-      "texto": "Las acciones de eficiencia muestran compromiso con el medio ambiente. Esto puede mejorar la percepción que tienen clientes y colaboradores. Una organización sostenible también puede diferenciarse de otras, y la gestión energética ayuda a fortalecer esa imagen.",
-      "orden": 32,
-      "publicado": true
-    },
-    {
-      "slug": "beneficio-4",
-      "categoria": "beneficio-gestion",
-      "titulo": "Mayor competitividad",
-      "resumen": "Reducir los gastos de energía puede mejorar los resultados de una empresa.",
-      "texto": "Reducir los gastos de energía puede mejorar los resultados de una empresa. También permite utilizar los recursos de una forma más eficiente. La modernización de equipos puede mejorar los procesos, ayudando a que la organización sea más competitiva.",
-      "orden": 33,
-      "publicado": true
-    },
-    {
-      "slug": "beneficio-5",
-      "categoria": "beneficio-gestion",
-      "titulo": "Equipos más duraderos",
-      "resumen": "Un buen uso y mantenimiento de los equipos prolonga su vida útil.",
-      "texto": "Un buen uso de los equipos puede ayudar a conservarlos por más tiempo. El mantenimiento periódico permite detectar problemas a tiempo. Además, evitar usos innecesarios reduce el desgaste, lo cual puede disminuir gastos de reparación y reemplazo.",
-      "orden": 34,
-      "publicado": true
-    },
-    {
-      "slug": "beneficio-6",
-      "categoria": "beneficio-gestion",
-      "titulo": "Impulso a la tecnología",
-      "resumen": "Los retos energéticos impulsan sistemas inteligentes de control y análisis.",
-      "texto": "Los retos energéticos están impulsando nuevas soluciones tecnológicas. Los sistemas inteligentes permiten controlar y analizar el consumo, y también ayudan a automatizar algunas tareas de gestión energética. La tecnología facilita encontrar nuevas formas de ahorrar y mejorar.",
-      "orden": 35,
-      "publicado": true
-    }
-  ]
+  { slug: 'bienvenida', categoria: 'portada', etiqueta: 'Gestión energética para el hogar', titulo: 'Conoce tu consumo. Decide qué mejorar.', resumen: 'Organiza tus equipos, registra lecturas y comprende cómo cambia la energía que utilizas en casa.', texto: 'EnerGest reúne en un solo lugar tus dispositivos, estimaciones y lecturas manuales del hogar. Empieza con la información que tienes y construye un historial que te ayude a comparar periodos.', textoBoton: 'Crear una cuenta', orden: 1, publicado: true },
+  { slug: 'home-pasos', categoria: 'seccion', etiqueta: 'Sencillo desde el primer día', titulo: 'Tu energía, en tres pasos', resumen: 'Comienza con tus equipos y consulta la información registrada.', texto: 'Pasos para comenzar', orden: 2, publicado: true },
+  { slug: 'home-herramientas', categoria: 'seccion', etiqueta: 'Al crear tu cuenta', titulo: 'Herramientas para entender tus equipos', resumen: 'Funciones personales para organizar el consumo de tu hogar.', texto: 'Herramientas de EnerGest', orden: 3, publicado: true },
+  { slug: 'home-aprende', categoria: 'seccion', etiqueta: 'Ideas para usar mejor la energía', titulo: 'Información que te puede servir', resumen: 'Conceptos y recomendaciones para interpretar tus registros.', texto: 'Información educativa', orden: 4, publicado: true },
+  { slug: 'home-eficiencia', categoria: 'seccion', etiqueta: 'Aprende sobre eficiencia energética', titulo: 'Eficiencia energética en casa', resumen: 'Referencias para tomar decisiones informadas sobre el uso de energía.', texto: 'Eficiencia energética', orden: 5, publicado: true },
+  { slug: 'home-beneficios', categoria: 'seccion', etiqueta: 'Gestión energética del hogar', titulo: 'Qué ganas al llevar un registro', resumen: 'Un historial ordenado ayuda a ver cambios y comparar periodos.', texto: 'Beneficios de gestionar', orden: 6, publicado: true },
+  { slug: 'paso-dispositivos', categoria: 'paso', etiqueta: '01', titulo: 'Registra tus dispositivos', resumen: 'Anota la categoría y la potencia indicada en la etiqueta o ficha de tu equipo.', texto: 'La potencia puede aparecer en vatios (W). Si no la encuentras, puedes usar un valor orientativo y marcarlo como estimado.', orden: 7, publicado: true },
+  { slug: 'paso-uso', categoria: 'paso', etiqueta: '02', titulo: 'Registra su uso o una lectura', resumen: 'Ingresa las horas de uso para obtener una estimación, o anota manualmente la lectura del hogar.', texto: 'EnerGest distingue los cálculos estimados de las lecturas manuales. Así puedes entender qué tipo de dato estás consultando.', orden: 8, publicado: true },
+  { slug: 'paso-compara', categoria: 'paso', etiqueta: '03', titulo: 'Consulta y compara', resumen: 'Revisa los datos por aparato y el total del hogar para reconocer cambios entre periodos.', texto: 'Una comparación es más útil cuando consideras las fechas, el periodo y las condiciones de uso.', orden: 9, publicado: true },
+  { slug: 'funcion-inventario', categoria: 'funcionalidad', etiqueta: '01', titulo: 'Inventario de equipos', resumen: 'Organiza nombre, categoría, potencia y hábitos de uso de tus aparatos.', texto: 'El inventario te ayuda a mantener los datos de tus dispositivos en un solo lugar.', orden: 10, publicado: true },
+  { slug: 'funcion-registros', categoria: 'funcionalidad', etiqueta: '02', titulo: 'Consumo estimado y lecturas', resumen: 'Diferencia cálculos a partir de potencia y horas de las lecturas que ingresas manualmente.', texto: 'Los valores calculados son estimaciones; las lecturas manuales corresponden a los datos que registra la persona usuaria.', orden: 11, publicado: true },
+  { slug: 'funcion-seguimiento', categoria: 'funcionalidad', etiqueta: '03', titulo: 'Seguimiento por periodos', resumen: 'Consulta registros por aparato y el total del hogar para observar cómo evolucionan.', texto: 'Los registros ayudan a describir el uso, pero por sí solos no garantizan una reducción del consumo.', orden: 12, publicado: true },
+  { slug: 'ejemplo-consumo', categoria: 'ejemplo', etiqueta: 'Ejemplo práctico', titulo: 'Un bombillo LED de 10 W', resumen: 'Si permanece encendido 5 horas, el cálculo es (10 W × 5 h) ÷ 1000 = 0,05 kWh estimados.', texto: 'Este resultado ilustra el cálculo por potencia y horas; no es una lectura del medidor. Usa la potencia indicada en tu propio equipo y registra las horas reales para obtener una estimación más representativa.', orden: 13, publicado: true },
+  { slug: 'home-invitacion', categoria: 'llamada-accion', etiqueta: 'Tu información, organizada', titulo: 'Empieza con lo que tienes hoy.', resumen: '', texto: 'Crea una cuenta para guardar tus dispositivos y construir un historial personal. El registro está disponible para los dominios autorizados por administración.', textoBoton: 'Crear mi cuenta', orden: 14, publicado: true },
+  { slug: 'lectura-factura', categoria: 'informativo', titulo: 'Qué representa el consumo de tu factura', resumen: 'El consumo de energía se expresa normalmente en kilovatios hora (kWh).', texto: 'En Colombia, el valor del servicio se calcula considerando el consumo del periodo y el costo unitario aplicable, además de los componentes y ajustes definidos para cada usuario. Compara el mismo número de días y revisa los kWh, no solo el valor en pesos: tarifas, subsidios y contribuciones pueden cambiar el valor facturado.', fuente: 'Comisión de Regulación de Energía y Gas (CREG)', fuenteUrl: 'https://gestornormativo.creg.gov.co/gestor/entorno/docs/concepto_creg_0000513_2019.htm', orden: 15, publicado: true },
+  { slug: 'registro-no-factura', categoria: 'pregunta-frecuente', titulo: '¿EnerGest reemplaza mi medidor o mi factura?', resumen: 'No. La aplicación organiza datos personales y presenta estimaciones basadas en la información ingresada.', texto: 'El cálculo de un equipo usa potencia en vatios multiplicada por horas de uso y dividida entre 1000 para expresar kWh estimados. No mide directamente la energía ni reemplaza el medidor, la factura o la lectura oficial del hogar. Si registras una lectura manual, verifica la unidad y fecha que muestra tu medidor.', fuente: 'UPME · Guías de consumo eficiente', fuenteUrl: 'https://www.upme.gov.co/simec/eficiencia-energetica/guias-de-consumo-eficiente/', orden: 16, publicado: true },
+  { slug: 'consejo-iluminacion-hogar', categoria: 'consejo', categoriaDispositivo: 'iluminacion', titulo: 'Aprovecha la luz natural y revisa tus bombillas', resumen: 'Apaga las luces de espacios desocupados y considera la eficiencia al reemplazar una bombilla.', texto: 'Durante el día, aprovecha la luz natural cuando sea posible. Al elegir una bombilla, compara la potencia y la información de eficiencia del producto, y confirma que sea compatible con la luminaria. El resultado depende del equipo y del tiempo de uso.', fuente: 'Ministerio de Minas y Energía de Colombia · Eficiencia energética', fuenteUrl: 'https://minenergia.gov.co/es/misional/eficiencia-energ%C3%A9tica/', orden: 17, publicado: true },
+  { slug: 'consejo-nevera-hogar', categoria: 'consejo', categoriaDispositivo: 'nevera', titulo: 'Revisa la etiqueta y el uso de tu nevera', resumen: 'La etiqueta de eficiencia aporta información para comparar equipos antes de comprar.', texto: 'En Colombia, el reglamento RETIQ establece requisitos de etiquetado para equipos como refrigeradores. Al comparar modelos, revisa la información de consumo y eficiencia de la etiqueta y las instrucciones del fabricante. En el uso diario, evita dejar la puerta abierta por mucho tiempo y conserva los sellos en buen estado.', fuente: 'Ministerio de Minas y Energía · Reglamento técnico RETIQ', fuenteUrl: 'https://minenergia.gov.co/es/misional/energia-electrica-2/reglamentos-tecnicos/reglamento-t%C3%A9cnico-de-etiquetado-retiq/', orden: 18, publicado: true },
+  { slug: 'uso-aire-acondicionado', categoria: 'consejo', categoriaDispositivo: 'aire_acondicionado', titulo: 'Usa el aire acondicionado según el espacio', resumen: 'El mantenimiento y las condiciones del espacio influyen en el funcionamiento del equipo.', texto: 'Sigue las instrucciones del fabricante para limpiar filtros y hacer mantenimiento. Mantén puertas y ventanas cerradas mientras el equipo funciona y apágalo cuando el espacio no lo necesite. El consumo real depende del modelo, la temperatura, el clima y el tiempo de uso.', fuente: 'Ministerio de Minas y Energía de Colombia · Eficiencia energética', fuenteUrl: 'https://minenergia.gov.co/es/misional/eficiencia-energ%C3%A9tica/', orden: 19, publicado: true },
+  { slug: 'uso-computador', categoria: 'consejo', categoriaDispositivo: 'computador', titulo: 'Revisa el tiempo de uso del computador', resumen: 'Apaga o suspende el equipo cuando no vayas a utilizarlo por un periodo prolongado.', texto: 'Ajusta las opciones de energía del sistema según el uso que le das y apaga el computador cuando termines la jornada. Si necesitas mantener tareas activas, elige la opción de suspensión que se ajuste a esa necesidad. El ahorro depende de la configuración y del equipo.', fuente: 'UPME · Guías de consumo eficiente', fuenteUrl: 'https://www.upme.gov.co/simec/eficiencia-energetica/guias-de-consumo-eficiente/', orden: 20, publicado: true },
+  { slug: 'uso-televisor', categoria: 'consejo', categoriaDispositivo: 'televisor', titulo: 'Apaga el televisor cuando termines de verlo', resumen: 'Evita dejarlo encendido sin que alguien lo esté usando.', texto: 'Apaga el televisor desde el control o el equipo cuando ya no lo estés utilizando. Revisa las funciones de ahorro de energía del modelo y consulta el manual para conocer qué hace cada modo. Los resultados dependen del aparato y de tus hábitos.', fuente: 'UPME · Guías de consumo eficiente', fuenteUrl: 'https://www.upme.gov.co/simec/eficiencia-energetica/guias-de-consumo-eficiente/', orden: 21, publicado: true },
+  { slug: 'uso-lavadora', categoria: 'consejo', categoriaDispositivo: 'lavadora', titulo: 'Consulta los programas de tu lavadora', resumen: 'Elige el ciclo según el tipo y la cantidad de ropa, siguiendo el manual del equipo.', texto: 'Revisa las instrucciones del fabricante para seleccionar el programa adecuado para la carga. Evita iniciar ciclos innecesarios y ten en cuenta que la energía utilizada depende del programa, la temperatura, el modelo y la cantidad de ropa.', fuente: 'UPME · Guías de consumo eficiente', fuenteUrl: 'https://www.upme.gov.co/simec/eficiencia-energetica/guias-de-consumo-eficiente/', orden: 22, publicado: true },
+  { slug: 'uso-otros-equipos', categoria: 'consejo', categoriaDispositivo: 'otro', titulo: 'Comprueba la potencia y el tiempo de uso', resumen: 'La etiqueta o el manual ayudan a identificar datos del equipo.', texto: 'Busca la potencia indicada por el fabricante y registra horas de uso que representen tu rutina. Si vas a comparar equipos, revisa productos de función similar y sus etiquetas disponibles. La estimación de EnerGest usa los datos que ingresas y no sustituye una medición.', fuente: 'UPME · Guías de consumo eficiente', fuenteUrl: 'https://www.upme.gov.co/simec/eficiencia-energetica/guias-de-consumo-eficiente/', orden: 23, publicado: true },
+  { slug: 'cambio-etiquetado', categoria: 'cambio-eficiencia', titulo: 'La etiqueta energética ayuda a comparar equipos', resumen: 'El etiquetado RETIQ informa sobre eficiencia y consumo en productos cubiertos por el reglamento.', texto: 'Antes de comprar un electrodoméstico, compara las etiquetas de los modelos equivalentes y consulta sus características. El etiquetado es una fuente para decidir con más información; el consumo de cada hogar también depende del uso y de las condiciones de instalación.', fuente: 'Ministerio de Minas y Energía · Reglamento técnico RETIQ', fuenteUrl: 'https://minenergia.gov.co/es/misional/energia-electrica-2/reglamentos-tecnicos/reglamento-t%C3%A9cnico-de-etiquetado-retiq/', orden: 24, publicado: true },
+  { slug: 'beneficio-comparar-periodos', categoria: 'beneficio-gestion', titulo: 'Un historial permite comparar periodos', resumen: 'Los registros ordenados ayudan a reconocer cuándo cambia el consumo.', texto: 'Al conservar fechas y periodos comparables, puedes revisar si el uso de tus equipos cambió. Una variación sirve como punto de partida para investigar horarios, clima, ocupación o cambios en los aparatos; no identifica por sí sola una causa.', fuente: 'UPME · Guías de consumo eficiente', fuenteUrl: 'https://www.upme.gov.co/simec/eficiencia-energetica/guias-de-consumo-eficiente/', orden: 25, publicado: true },
+  { slug: 'beneficio-datos-hogar', categoria: 'beneficio-gestion', titulo: 'Los datos ayudan a priorizar preguntas', resumen: 'Ver consumo por equipo puede orientar dónde conviene observar con más detalle.', texto: 'Un inventario y un historial de consumo pueden ayudarte a decidir qué aparato revisar primero. Las estimaciones dependen de los datos ingresados, por lo que conviene verificarlos con la etiqueta del equipo y tus lecturas cuando estén disponibles.', fuente: 'UPME · Guías de consumo eficiente', fuenteUrl: 'https://www.upme.gov.co/simec/eficiencia-energetica/guias-de-consumo-eficiente/', orden: 26, publicado: true },
 ];
 
 async function inicializarContenido() {
   await connectDB();
   try {
     for (const contenido of CONTENIDO_INICIAL) {
-      await Contenido.updateOne(
-        { slug: contenido.slug },
-        { $setOnInsert: contenido },
-        { upsert: true }
-      );
+      await Contenido.updateOne({ slug: contenido.slug }, { $setOnInsert: contenido }, { upsert: true });
     }
-    console.log('Contenido editorial inicial disponible, incluidas las secciones educativas editables. Los textos existentes no se reemplazaron.');
+    // Oculta únicamente las tarjetas genéricas antiguas de demostración empresarial.
+    // No modifica los demás textos ni reemplaza contenido editorial administrado.
+    await Contenido.updateMany(
+      { slug: { $in: [...Array.from({ length: 6 }, (_, i) => `tendencia-${i + 1}`), ...Array.from({ length: 6 }, (_, i) => `beneficio-${i + 1}`)] } },
+      { $set: { publicado: false } }
+    );
+    console.log('Contenido inicial para hogares disponible. Los textos existentes y las ediciones de administración se conservaron.');
   } catch (error) {
     console.error('No se pudo inicializar el contenido:', error.message);
     process.exitCode = 1;
