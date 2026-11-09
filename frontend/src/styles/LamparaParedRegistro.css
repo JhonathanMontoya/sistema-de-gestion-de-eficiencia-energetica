@@ -1,0 +1,15 @@
+.registro-lampara { width: min(100%, 410px); aspect-ratio: 440 / 420; position: relative; justify-self: center; isolation: isolate; }
+.registro-lampara__dibujo { display: block; width: 100%; height: 100%; overflow: visible; }
+.registro-lampara__luz, .registro-lampara__haz { opacity: .18; transition: opacity .45s ease; }
+.registro-lampara--encendida .registro-lampara__luz { opacity: 1; }
+.registro-lampara--encendida .registro-lampara__haz { opacity: .48; }
+.registro-lampara--encendida .registro-lampara__dibujo g { filter: drop-shadow(0 0 9px #ffe8a1); }
+.registro-lampara__cuerda { width: 42px; height: 52px; padding: 0; position: absolute; left: 67.3%; top: 61.5%; border: 0; background: transparent; cursor: pointer; touch-action: manipulation; }
+.registro-lampara__cuerda::before { content: ''; width: 2px; height: 28px; position: absolute; top: 0; left: 50%; background: #343a34; }
+.registro-lampara__cuerda span { width: 12px; height: 21px; position: absolute; left: calc(50% - 5px); bottom: 0; border: 1px solid #555b52; border-radius: 5px; background: linear-gradient(90deg,#333931,#686b60,#30362f); box-shadow: 0 2px 4px #26322640; transition: transform .2s ease; }
+.registro-lampara__cuerda:hover span, .registro-lampara__cuerda:focus-visible span { transform: translateY(5px); }
+.registro-lampara__cuerda:focus-visible { outline: 2px solid #267957; outline-offset: 2px; border-radius: 12px; }
+.registro-lampara__instruccion { position: absolute; right: 4%; bottom: 3%; color: #63776a; font-size: 11px; font-weight: 600; }
+.registro-lampara--encendida .registro-lampara__instruccion { color: #267957; }
+@media (max-width: 760px) { .registro-lampara { width: min(100%, 260px); margin: 8px auto -7px; } .registro-lampara__instruccion { font-size: 9px; } }
+@media (prefers-reduced-motion: reduce) { .registro-lampara *, .registro-lampara *::before, .registro-lampara *::after { transition-duration: .01ms !important; } }
