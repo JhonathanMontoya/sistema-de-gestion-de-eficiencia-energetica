@@ -1,14 +1,21 @@
 const express = require('express');
 const protegerRuta = require('../middleware/authMiddleware');
 const { permitirRoles } = require('../middleware/authMiddleware');
-const { listarUsuarios, cambiarRol, datosUsuario, actualizarDispositivoUsuario, archivarDispositivoUsuario, eliminarLecturaUsuario, listarAuditoria } = require('../controllers/usuarioController');
+const {
+  listarUsuarios,
+  cambiarRol,
+  actualizarUsuario,
+  eliminarUsuario,
+  listarAuditoria,
+} = require('../controllers/usuarioController');
+
 const router = express.Router();
+
 router.use(protegerRuta, permitirRoles('administrador'));
 router.get('/', listarUsuarios);
 router.get('/auditoria', listarAuditoria);
-router.get('/:id/datos', datosUsuario);
+router.patch('/:id', actualizarUsuario);
 router.patch('/:id/rol', cambiarRol);
-router.put('/:id/dispositivos/:dispositivoId', actualizarDispositivoUsuario);
-router.delete('/:id/dispositivos/:dispositivoId', archivarDispositivoUsuario);
-router.delete('/:id/lecturas/:lecturaId', eliminarLecturaUsuario);
+router.delete('/:id', eliminarUsuario);
+
 module.exports = router;

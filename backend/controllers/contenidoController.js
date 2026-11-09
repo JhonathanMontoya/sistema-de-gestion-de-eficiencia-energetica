@@ -1,85 +1,57 @@
-const mongoose = require('mongoose');
-const Contenido = require('../models/Contenido');
+const contenidoService = require('../services/contenidoService');
+const manejarError = require('./manejarError');
 
 async function listarContenidoPublico(req, res) {
   try {
-    const contenidos = await Contenido.find({ publicado: true })
-      .select('-__v')
-      .sort({ orden: 1, createdAt: 1 });
-    return res.json({ contenidos });
+    return res.json({ contenidos: await contenidoService.listarPublico() });
   } catch (error) {
-    console.error('[contenidoController.listarContenidoPublico]', error);
-    return res.status(500).json({ mensaje: 'No se pudo cargar el contenido' });
+    return manejarError(res, error, { contexto: 'contenidoController.listarContenidoPublico', mensaje: 'No se pudo cargar el contenido' });
   }
 }
 
 async function listarContenidoAdmin(req, res) {
   try {
-    const contenidos = await Contenido.find().sort({ orden: 1, createdAt: -1 });
-    return res.json({ contenidos });
+    return res.json({ contenidos: await contenidoService.listarAdministracion() });
   } catch (error) {
-    console.error('[contenidoController.listarContenidoAdmin]', error);
-    return res.status(500).json({ mensaje: 'No se pudo cargar el contenido' });
+    return manejarError(res, error, { contexto: 'contenidoController.listarContenidoAdmin', mensaje: 'No se pudo cargar el contenido' });
   }
 }
 
 async function crearContenido(req, res) {
   try {
-    const contenido = await Contenido.create(req.body);
+    const contenido = await contenidoService.crear(req.body);
     return res.status(201).json({ mensaje: 'Contenido creado', contenido });
   } catch (error) {
-    if (error.code === 11000) return res.status(409).json({ mensaje: 'Ese identificador de contenido ya existe' });
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return res.status(400).json({ mensaje: 'Revisa los campos del contenido' });
-    }
-    console.error('[contenidoController.crearContenido]', error);
-    return res.status(500).json({ mensaje: 'No se pudo crear el contenido' });
+    return manejarError(res, error, {
+      contexto: 'contenidoController.crearContenido',
+      mensaje: 'No se pudo crear el contenido',
+      duplicado: 'Ese identificador de contenido ya existe',
+      validacion: 'Revisa los campos del contenido',
+    });
   }
 }
 
 async function actualizarContenido(req, res) {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
-      return res.status(400).json({ mensaje: 'El identificador no es válido' });
-    }
-    const camposPermitidos = ['slug', 'categoria', 'titulo', 'resumen', 'texto', 'imagenUrl', 'fuente', 'fuenteUrl', 'orden', 'publicado'];
-    const cambios = Object.fromEntries(
-      Object.entries(req.body).filter(([campo]) => camposPermitidos.includes(campo))
-    );
-    const contenido = await Contenido.findByIdAndUpdate(req.params.id, cambios, {
-      new: true,
-      runValidators: true,
-    });
-    if (!contenido) return res.status(404).json({ mensaje: 'Contenido no encontrado' });
+    const contenido = await contenidoService.actualizar(req.params.id, req.body);
     return res.json({ mensaje: 'Contenido actualizado', contenido });
   } catch (error) {
-    if (error.code === 11000) return res.status(409).json({ mensaje: 'Ese identificador de contenido ya existe' });
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return res.status(400).json({ mensaje: 'Revisa los campos del contenido' });
-    }
-    console.error('[contenidoController.actualizarContenido]', error);
-    return res.status(500).json({ mensaje: 'No se pudo actualizar el contenido' });
+    return manejarError(res, error, {
+      contexto: 'contenidoController.actualizarContenido',
+      mensaje: 'No se pudo actualizar el contenido',
+      duplicado: 'Ese identificador de contenido ya existe',
+      validacion: 'Revisa los campos del contenido',
+    });
   }
 }
 
 async function eliminarContenido(req, res) {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
-      return res.status(400).json({ mensaje: 'El identificador no es válido' });
-    }
-    const contenido = await Contenido.findByIdAndDelete(req.params.id);
-    if (!contenido) return res.status(404).json({ mensaje: 'Contenido no encontrado' });
+    await contenidoService.eliminar(req.params.id);
     return res.json({ mensaje: 'Contenido eliminado' });
   } catch (error) {
-    console.error('[contenidoController.eliminarContenido]', error);
-    return res.status(500).json({ mensaje: 'No se pudo eliminar el contenido' });
+    return manejarError(res, error, { contexto: 'contenidoController.eliminarContenido', mensaje: 'No se pudo eliminar el contenido' });
   }
 }
 
-module.exports = {
-  listarContenidoPublico,
-  listarContenidoAdmin,
-  crearContenido,
-  actualizarContenido,
-  eliminarContenido,
-};
+module.exports = { listarContenidoPublico, listarContenidoAdmin, crearContenido, actualizarContenido, eliminarContenido };

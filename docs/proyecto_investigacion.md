@@ -1,42 +1,49 @@
-EnerGest — Sistema de Gestión de Eficiencia Energética
+EnerGest — Sistema personal de gestión de eficiencia energética en el hogar
 Introducción
 
-El consumo energético ineficiente afecta tanto la sostenibilidad ambiental como la rentabilidad de las organizaciones. Muchas instalaciones no cuentan con herramientas accesibles para registrar y monitorear su consumo, lo que dificulta detectar desperdicios a tiempo. Este proyecto, enmarcado en el ODS 12 (Producción y consumo responsable), propone EnerGest, un sistema web para registrar dispositivos, llevar historial de consumo y recibir alertas cuando se superen límites definidos.
+Comprender el consumo de energía en el hogar requiere organizar información de los aparatos y de las facturas o lecturas disponibles. Cuando estos datos se encuentran dispersos, resulta difícil reconocer qué se ha registrado, comparar periodos y decidir qué conviene revisar. Enmarcado en el ODS 12 (Producción y consumo responsable), EnerGest propone una aplicación web personal para registrar aparatos, estimar su consumo habitual, guardar lecturas manuales del hogar y mostrar avisos y recomendaciones comprensibles.
 
 Definición del problema
 
-Las organizaciones suelen carecer de un registro centralizado de qué equipos consumen energía y cuánto. Sin un historial periódico, es difícil saber si las medidas de eficiencia funcionan o si el consumo aumenta con el tiempo. Al no existir alertas, los problemas suelen detectarse solo hasta que llega la factura, cuando ya no se puede actuar. Muchas organizaciones pequeñas manejan esto en hojas de cálculo desorganizadas, por no contar con un sistema dedicado y de bajo costo.
+En el uso doméstico, la información sobre consumo suele estar repartida entre facturas, etiquetas de aparatos y registros personales. Además, una estimación calculada a partir de la potencia y las horas de uso no equivale a una medición del aparato ni al consumo total facturado en el hogar. La falta de una herramienta que organice y distinga estas fuentes puede dificultar la lectura de los datos y la identificación de cambios que merecen atención.
 
-Pregunta orientadora: ¿cómo facilitar el registro, monitoreo y análisis del consumo energético de una organización, de forma accesible y sin infraestructura costosa?
+Pregunta orientadora: ¿cómo puede una aplicación web personal facilitar el registro y la comprensión del consumo energético de los aparatos y del hogar, distinguiendo las estimaciones de las lecturas registradas?
 
 Justificación
-Ambiental: reduce el desperdicio al hacer visible el consumo real y sus tendencias.
-Económico: permite identificar ahorros antes de que se conviertan en sobrecostos.
-Formativo: aplica conceptos de desarrollo full-stack sobre un caso con propósito social.
-Accesibilidad: usa tecnologías gratuitas (React, Node/Express, MongoDB Atlas), viable incluso para organizaciones pequeñas.
+Ambiental: promueve una observación más consciente del uso de energía en el hogar, en relación con el ODS 12.
+Económica: permite registrar una tarifa editable en pesos colombianos y consultar valores estimados; estos cálculos no garantizan ahorros ni sustituyen la factura del servicio.
+Formativa: aplica conceptos de desarrollo web full-stack a una necesidad cotidiana y de interés social.
+Accesibilidad: ofrece una interfaz web para organizar información que el usuario ingresa, sin requerir integración con medidores inteligentes.
 Objetivos
 Objetivo general
 
-Desarrollar un sistema web que permita registrar, monitorear y analizar el consumo energético de los dispositivos de una operación, para facilitar decisiones orientadas a la eficiencia.
+Desarrollar una aplicación web personal que permita organizar aparatos y lecturas del hogar, consultar estimaciones y avisos explicables, y apoyar decisiones informadas sobre el uso de energía.
 
 Objetivos específicos
-Implementar autenticación (registro, login, logout) que garantice acceso individual a cada usuario.
-Construir un módulo de gestión de dispositivos (crear, ver, editar, eliminar).
-Registrar lecturas de consumo por dispositivo para construir un historial.
-Analizar consumo total y comparaciones entre periodos.
-Notificar al usuario cuando el consumo supere un límite definido.
-Generar reportes con el historial de consumo.
-Garantizar la seguridad de la información (contraseñas protegidas, control de acceso por sesión).
+Implementar registro e inicio de sesión, con acceso a los datos limitado a la cuenta autenticada.
+Gestionar aparatos personales con categoría, potencia y horas habituales de uso para calcular estimaciones identificadas como tales.
+Registrar por separado lecturas de aparatos y lecturas manuales del consumo total del hogar, conservando el periodo y la fuente indicada.
+Guardar por cuenta la tarifa editable en COP/kWh y límites diarios y mensuales para aparatos y hogar.
+Mostrar avisos dentro de la aplicación cuando los cálculos disponibles superen los límites configurados, indicando su fuente y periodo de referencia.
+Presentar recomendaciones deterministas asociadas a los aparatos y al contenido educativo administrado; no se usa inteligencia artificial.
+Permitir al administrador gestionar cuentas, roles y contenido editorial de la página, sin concederle acceso a los datos privados de consumo de las cuentas.
+Proteger las rutas y operaciones con autenticación, autorización por rol y validación en el servidor.
+
+Alcance y limitaciones de la versión
+
+La versión actual está orientada a cuentas individuales. Los hogares compartidos y la relación entre varias cuentas y un hogar quedan para una etapa posterior. El consumo por aparato se estima con los datos que registra el usuario; las lecturas del total del hogar son datos manuales. Los avisos se calculan al consultar la aplicación y no constituyen una bandeja histórica ni notificaciones por correo o teléfono. La aplicación no integra medidores inteligentes ni un proveedor de inteligencia artificial. La tarifa editable y las proyecciones son referencias configuradas por el usuario, no tarifas oficiales ni promesas de ahorro.
+
+La administración de usuarios y contenidos es una función de gestión de la plataforma. Por privacidad, el rol administrador no consulta consumos privados de otras cuentas. La gestión de hogares compartidos, los reportes institucionales y la integración con organizaciones no forman parte de esta versión.
 
 Marco Teórico
 
 
 
-Eficiencia y gestión energética: capacidad de reducir el consumo de energía sin afectar la calidad del servicio prestado. La gestión energética planifica, monitorea y controla ese consumo para identificar ahorros, siguiendo el ciclo de mejora continua que promueven estándares como la ISO 50001.
+Eficiencia y gestión energética: uso de información sobre energía para comprender patrones y evaluar oportunidades de mejora sin perder de vista las condiciones de uso. EnerGest ofrece registros y estimaciones de apoyo; no mide por sí mismo el consumo real ni certifica un sistema de gestión energética.
 
 
 
-ODS 12 (Producción y consumo responsable): objetivo de la Agenda 2030 que busca garantizar patrones de consumo sostenibles. La gestión eficiente de la energía reduce directamente el impacto ambiental de una organización.
+ODS 12 (Producción y consumo responsable): marco de la Agenda 2030 relacionado con patrones de consumo sostenibles. El proyecto toma este objetivo como contexto educativo y promueve que el usuario observe la información energética de su hogar; no calcula ni atribuye una reducción ambiental automática.
 
 
 
@@ -44,7 +51,7 @@ Sistemas de información: conjunto de datos, procesos y tecnología que capturan
 
 
 
-Arquitectura cliente-servidor: el frontend gestiona la interacción con el usuario y el backend la lógica de negocio, comunicándose mediante una API HTTP. Este proyecto usa React en el frontend y Node.js con Express en el backend, con arquitectura por capas (rutas, controladores, modelos).
+Arquitectura cliente-servidor: el frontend gestiona la interacción con el usuario y el backend la lógica de negocio, comunicándose mediante una API HTTP. Este proyecto usa React en el frontend y Node.js con Express en el backend, separando rutas, controladores, servicios, reglas de dominio y modelos de persistencia.
 
 
 
@@ -52,7 +59,7 @@ Bases de datos NoSQL: almacenan información en documentos flexibles (como Mongo
 
 
 
-Autenticación y seguridad: los JSON Web Tokens (JWT) mantienen la sesión de un usuario sin que el servidor deba recordar su estado. Las contraseñas se protegen con funciones de hash (bcrypt), que las vuelven irreversibles.
+Autenticación y seguridad: los JSON Web Tokens (JWT) permiten autenticar solicitudes y bcrypt se utiliza para almacenar contraseñas mediante hash. La autorización y la propiedad de los datos deben comprobarse en el servidor para cada operación protegida.
 
 
 
