@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import OndaDeCarga from '../components/OndaDeCarga';
+import LamparaParedRegistro from '../components/LamparaParedRegistro';
 import '../styles/Auth.css';
 
 export default function Register() {
@@ -13,6 +13,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
   const [dominios, setDominios] = useState(['gmail.com', 'unac.edu.co']);
+  const [lamparaEncendida, setLamparaEncendida] = useState(false);
 
   const { iniciarSesion } = useAuth();
   const navigate = useNavigate();
@@ -63,8 +64,9 @@ export default function Register() {
 
   return (
     <div className="auth">
-      <section className="auth__brand">
-        <div className="auth__brand-content">
+      <section className="auth__brand auth__brand--registro">
+        <div className="auth__brand-content auth__brand-content--registro">
+          <div className="auth__brand-copy--registro">
           <span className="auth__eyebrow">Producción y consumo responsable</span>
           <h1 className="auth__logo">
             Ener<span>Gest</span>
@@ -73,8 +75,9 @@ export default function Register() {
             Crea tu cuenta para registrar los aparatos de tu hogar y consultar
             estimaciones y lecturas de consumo.
           </p>
-          <OndaDeCarga />
           <span className="auth__caption">Estimaciones y lecturas registradas por ti</span>
+          </div>
+          <LamparaParedRegistro encendida={lamparaEncendida} onAlternar={() => setLamparaEncendida((actual) => !actual)} />
         </div>
       </section>
 
